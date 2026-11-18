@@ -35,20 +35,24 @@ export const FounderDashboardModal: React.FC<FounderDashboardModalProps> = ({ is
       return;
     }
 
-    const headers = ['Order ID', 'Date', 'Customer', 'Fragrance', 'Size', 'Qty', 'Total (RM)', 'Pickup Hub', 'Oil Used (ml)', 'Alcohol Used (ml)', 'Notes'];
-    const rows = orders.map(o => [
-      o.id,
-      new Date(o.timestamp).toLocaleString(),
-      `"${o.studentName}"`,
-      `"${o.fragranceName}"`,
-      o.size,
-      o.quantity,
-      o.totalPrice,
-      `"${o.pickupStation}"`,
-      o.oilConsumedMl,
-      o.alcoholConsumedMl,
-      `"${o.notes || ''}"`,
-    ]);
+    const headers = ['Order ID', 'Date', 'Customer', 'Items', 'Total Bottles', 'Total (RM)', 'Pickup Hub', 'Oil Used (ml)', 'Alcohol Used (ml)', 'Notes'];
+    const rows = orders.map(o => {
+      const itemsSummary = o.items
+        ? o.items.map(item => `${item.fragranceName} ${item.size}x${item.quantity}`).join(' | ')
+        : 'N/A';
+      return [
+        o.id,
+        new Date(o.timestamp).toLocaleString(),
+        `"${o.studentName}"`,
+        `"${itemsSummary}"`,
+        o.totalBottles || 1,
+        o.totalPrice,
+        `"${o.pickupStation}"`,
+        o.oilConsumedMl,
+        o.alcoholConsumedMl,
+        `"${o.notes || ''}"`,
+      ];
+    });
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
@@ -229,23 +233,38 @@ export const FounderDashboardModal: React.FC<FounderDashboardModalProps> = ({ is
                     <tr>
                       <th className="py-2.5 px-3">Order ID</th>
                       <th className="py-2.5 px-3">Customer</th>
-                      <th className="py-2.5 px-3">Fragrance</th>
-                      <th className="py-2.5 px-3">Size & Qty</th>
+                      <th className="py-2.5 px-3">Items Ordered</th>
+                      <th className="py-2.5 px-3">Bottles</th>
                       <th className="py-2.5 px-3">Total</th>
                       <th className="py-2.5 px-3">Hub</th>
-                      <th className="py-2.5 px-3">Oil Consumed</th>
+                      <th className="py-2.5 px-3">Oil Used</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 bg-[#140306]">
                     {orders.map(order => (
-                      <tr key={order.id} className="hover:bg-white/[0.02]">
-                        <td className="py-2.5 px-3 font-mono text-[#D4AF37]">{order.id}</td>
-                        <td className="py-2.5 px-3 text-white font-medium">{order.studentName}</td>
-                        <td className="py-2.5 px-3">{order.fragranceName}</td>
-                        <td className="py-2.5 px-3">{order.size} (x{order.quantity})</td>
-                        <td className="py-2.5 px-3 font-semibold text-white">RM {order.totalPrice}</td>
-                        <td className="py-2.5 px-3 truncate max-w-[140px]">{order.pickupStation.replace(' Hub', '')}</td>
-                        <td className="py-2.5 px-3 text-cyan-400">{order.oilConsumedMl} ml</td>
+                      <tr key={order.id} className="hover:bg-white/[0.02] align-top">
+                        <td className="py-2.5 px-3 font-mono text-[#D4AF37] whitespace-nowrap">{order.id}</td>
+                        <td className="py-2.5 px-3 text-white font-medium whitespace-nowrap">{order.studentName}</td>
+                        <td className="py-2.5 px-3">
+                          {order.items && order.items.length > 0 ? (
+                            <ul className="space-y-0.5">
+                              {order.items.map((item, i) => (
+                                <li key={i} className="text-[11px] text-[#C5B3A3]">
+                                  <span className="text-white font-semibold">{item.fragranceName}</span>
+                                  {' '}<span className="text-[#D4AF37]">{item.size}</span>
+                                  {' '}×{item.quantity}
+                                  {' '}<span className="text-[#A59283]">(RM {item.price * item.quantity})</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <span className="text-[#A59283] text-xs">Legacy order</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-white font-semibold">{order.totalBottles || 1}</td>
+                        <td className="py-2.5 px-3 font-semibold text-white whitespace-nowrap">RM {order.totalPrice}</td>
+                        <td className="py-2.5 px-3 text-[11px] text-[#A59283] max-w-[120px] truncate">{order.pickupStation.replace(' Hub', '')}</td>
+                        <td className="py-2.5 px-3 text-cyan-400 whitespace-nowrap">{order.oilConsumedMl} ml</td>
                       </tr>
                     ))}
                   </tbody>

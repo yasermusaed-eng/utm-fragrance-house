@@ -17,7 +17,6 @@ export const App: React.FC = () => {
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [selectedFragranceId, setSelectedFragranceId] = useState<string | undefined>(undefined);
-  const [selectedSize, setSelectedSize] = useState<'30ml' | '50ml' | '100ml' | undefined>(undefined);
 
   // Easter egg 5-click tracker on UTM Logo Crest
   const crestClickCountRef = useRef(0);
@@ -40,8 +39,7 @@ export const App: React.FC = () => {
     }, 2500);
   };
 
-  const handleOpenOrder = (size?: '30ml' | '50ml' | '100ml') => {
-    if (size) setSelectedSize(size);
+  const handleOpenOrder = (_size?: '30ml' | '50ml' | '100ml') => {
     setIsOrderModalOpen(true);
   };
 
@@ -81,7 +79,6 @@ export const App: React.FC = () => {
         isOpen={isOrderModalOpen}
         onClose={handleCloseOrder}
         preselectedFragranceId={selectedFragranceId}
-        preselectedSize={selectedSize}
       />
 
       {/* Secret Founder PIN Authentication Modal */}

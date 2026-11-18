@@ -70,7 +70,7 @@ export const FRAGRANCES: Fragrance[] = [
     longevity: '7–9 Hours',
     recommendedFor: 'Hot afternoon campus walks, lecture halls, clean luxury statement',
     colorGradient: 'from-amber-500/20 via-orange-900/10 to-transparent',
-    image: '/images/perfumes/lv-imagination.jpg'
+    image: '/images/perfumes/lv-imagination.png'
   },
   {
     id: 'dior-sauvage',
@@ -90,7 +90,7 @@ export const FRAGRANCES: Fragrance[] = [
     longevity: '8–10+ Hours',
     recommendedFor: 'Evening hangouts, presentations, high-impact first impressions',
     colorGradient: 'from-blue-600/20 via-indigo-950/20 to-transparent',
-    image: '/images/perfumes/dior-sauvage.jpg'
+    image: '/images/perfumes/dior-sauvage.png'
   },
   {
     id: 'versace-eros',
@@ -110,7 +110,7 @@ export const FRAGRANCES: Fragrance[] = [
     longevity: '8–10 Hours',
     recommendedFor: 'Weekend vibes, casual dining, gym, clubbing & dates',
     colorGradient: 'from-emerald-500/20 via-teal-950/20 to-transparent',
-    image: '/images/perfumes/versace-eros.jpg'
+    image: '/images/perfumes/versace-eros.png'
   },
   {
     id: 'jpg-le-male',
@@ -130,7 +130,7 @@ export const FRAGRANCES: Fragrance[] = [
     longevity: '8–10 Hours',
     recommendedFor: 'Study dates, library sessions, air-conditioned lecture halls',
     colorGradient: 'from-amber-600/20 via-yellow-950/20 to-transparent',
-    image: '/images/perfumes/jpg-le-male.jpg'
+    image: '/images/perfumes/jpg-le-male.png'
   },
   {
     id: 'armani-adg',
@@ -150,7 +150,7 @@ export const FRAGRANCES: Fragrance[] = [
     longevity: '6–8 Hours',
     recommendedFor: 'Daily signature, gym workouts, intense hot days',
     colorGradient: 'from-cyan-500/20 via-slate-900/20 to-transparent',
-    image: '/images/perfumes/armani-adg.jpg'
+    image: '/images/perfumes/armani-adg.png'
   },
   {
     id: 'ysl-myslf',
