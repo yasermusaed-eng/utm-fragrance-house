@@ -1,7 +1,11 @@
 import React from 'react';
-import { MessageCircle, FileText, ArrowUp } from 'lucide-react';
+import { MessageCircle, ArrowUp, BarChart3 } from 'lucide-react';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onOpenDashboard?: () => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onOpenDashboard }) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -36,39 +40,45 @@ export const Footer: React.FC = () => {
               Independent fine fragrance compounders founded at Universiti Teknologi Malaysia. Dedicated to bringing high-concentration (20% EDP) European perfumes to university students at fair, honest prices.
             </p>
 
-            {/* Social Icons */}
-            <div className="flex items-center gap-3">
+            {/* Official Social Icons (High Contrast & Clear) */}
+            <div className="flex items-center gap-4">
+              
+              {/* Instagram Official - High Contrast Gold & Gradient */}
               <a
                 href="https://www.instagram.com/utm.fragrance?vrfl=M2lzYzV2MGs5dmxk&utm_source=qr"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-xl bg-[#1f050b] border border-[#D4AF37]/30 flex items-center justify-center text-[#F6E3B4] hover:bg-[#D4AF37] hover:text-[#140306] transition-all"
+                className="group flex items-center gap-2.5 px-4 py-2 rounded-xl bg-[#20060d] border border-[#D4AF37]/40 hover:border-[#F6E3B4] hover:bg-[#340b15] transition-all shadow-md"
                 title="Instagram @utm.fragrance"
               >
-                <svg className="w-4 h-4 fill-currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                </svg>
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] flex items-center justify-center p-1 text-white shadow-sm">
+                  <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                  </svg>
+                </div>
+                <span className="text-xs font-semibold text-[#F6E3B4] group-hover:text-white transition-colors">
+                  @utm.fragrance
+                </span>
               </a>
 
+              {/* WhatsApp Community Channel */}
               <a
                 href="https://chat.whatsapp.com/LEKvUz1JPeC3hlmNBKosi3"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-xl bg-[#1f050b] border border-[#D4AF37]/30 flex items-center justify-center text-[#25D366] hover:bg-[#25D366] hover:text-[#140306] transition-all"
-                title="Official WhatsApp Community"
+                className="group flex items-center gap-2.5 px-4 py-2 rounded-xl bg-[#20060d] border border-[#25D366]/40 hover:border-[#25D366] hover:bg-[#0c2414] transition-all shadow-md"
+                title="Official WhatsApp Community Channel"
               >
-                <MessageCircle className="w-4 h-4" />
+                <div className="w-6 h-6 rounded-lg bg-[#25D366] flex items-center justify-center text-[#140306]">
+                  <MessageCircle className="w-4 h-4 fill-current" />
+                </div>
+                <span className="text-xs font-semibold text-[#25D366] group-hover:text-emerald-300 transition-colors">
+                  WhatsApp VIP
+                </span>
               </a>
 
-              <a
-                href="https://docs.google.com/forms/d/e/1FAIpQLSeTlOXCdGi7PYOfeCWrf5Vr_u39t1Qn9TE38ulO4Z1j-JQy-A/viewform"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-xl bg-[#1f050b] border border-[#D4AF37]/30 flex items-center justify-center text-[#F6E3B4] hover:bg-[#D4AF37] hover:text-[#140306] transition-all"
-                title="Campus Fragrance Survey"
-              >
-                <FileText className="w-4 h-4" />
-              </a>
             </div>
           </div>
 
@@ -106,7 +116,7 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Direct Contact */}
+          {/* Direct Contact & Founder View */}
           <div>
             <h4 className="font-cinzel text-xs font-bold uppercase tracking-widest text-white mb-4">
               Direct Inquiries
@@ -123,6 +133,19 @@ export const Footer: React.FC = () => {
               </a>
               <p className="pt-2">Campus Fulfillment:</p>
               <span className="text-[#C5B3A3] block">Universiti Teknologi Malaysia (UTM), 81310 Skudai, Johor</span>
+              
+              {/* Founder Operations Tracker Trigger */}
+              {onOpenDashboard && (
+                <div className="pt-3">
+                  <button
+                    onClick={onOpenDashboard}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#D4AF37] hover:text-[#F6E3B4] cursor-pointer"
+                  >
+                    <BarChart3 className="w-3.5 h-3.5" />
+                    <span>Founder Operations Tracker</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

@@ -9,9 +9,11 @@ import { PickupStations } from './components/PickupStations';
 import { FAQ } from './components/FAQ';
 import { Footer } from './components/Footer';
 import { WhatsAppOrderModal } from './components/WhatsAppOrderModal';
+import { FounderDashboardModal } from './components/FounderDashboardModal';
 
 export const App: React.FC = () => {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [selectedFragranceId, setSelectedFragranceId] = useState<string | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<'30ml' | '50ml' | '100ml' | undefined>(undefined);
 
@@ -32,7 +34,10 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0e0205] text-[#f5ede4] font-sans relative selection:bg-[#d4af37]/30 selection:text-[#f6e3b4]">
       {/* Sticky Navigation */}
-      <Navbar onOpenOrder={() => handleOpenOrder()} />
+      <Navbar
+        onOpenOrder={() => handleOpenOrder()}
+        onOpenDashboard={() => setIsDashboardOpen(true)}
+      />
 
       {/* Main Content */}
       <main>
@@ -46,7 +51,7 @@ export const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <Footer />
+      <Footer onOpenDashboard={() => setIsDashboardOpen(true)} />
 
       {/* Interactive WhatsApp Order Creator Modal */}
       <WhatsAppOrderModal
@@ -54,6 +59,12 @@ export const App: React.FC = () => {
         onClose={handleCloseOrder}
         preselectedFragranceId={selectedFragranceId}
         preselectedSize={selectedSize}
+      />
+
+      {/* Founder Operations & Inventory Resource Tracker */}
+      <FounderDashboardModal
+        isOpen={isDashboardOpen}
+        onClose={() => setIsDashboardOpen(false)}
       />
     </div>
   );

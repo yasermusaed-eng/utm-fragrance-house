@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, MessageCircle, Menu, X } from 'lucide-react';
+import { Sparkles, MessageCircle, Menu, X, BarChart3 } from 'lucide-react';
 
 interface NavbarProps {
   onOpenOrder: () => void;
+  onOpenDashboard?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenOrder }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenOrder, onOpenDashboard }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -79,8 +80,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenOrder }) => {
           </a>
         </nav>
 
-        {/* CTA Button */}
+        {/* CTA Button Group */}
         <div className="hidden sm:flex items-center gap-3">
+          {onOpenDashboard && (
+            <button
+              onClick={onOpenDashboard}
+              title="Founder Operations & Inventory Tracker"
+              className="p-2.5 rounded-full text-[#D4AF37] hover:text-[#F6E3B4] bg-[#22070e] border border-[#D4AF37]/30 hover:border-[#D4AF37] transition-all cursor-pointer"
+            >
+              <BarChart3 className="w-4 h-4" />
+            </button>
+          )}
+
           <button
             onClick={onOpenOrder}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold tracking-wider uppercase text-[#140306] bg-gradient-to-r from-[#F6E3B4] via-[#D4AF37] to-[#A4771F] hover:brightness-110 shadow-lg shadow-[#D4AF37]/25 active:scale-95 transition-all cursor-pointer"
@@ -94,7 +105,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenOrder }) => {
         <div className="flex md:hidden items-center gap-2">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-[#F6E3B4] hover:text-white"
+            className="p-2 text-[#F6E3B4] hover:text-white cursor-pointer"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -140,13 +151,27 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenOrder }) => {
           >
             Frequently Asked Questions
           </a>
-          <div className="pt-3 border-t border-white/10">
+
+          {onOpenDashboard && (
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenDashboard();
+              }}
+              className="w-full py-2.5 rounded-xl text-xs font-semibold text-[#D4AF37] border border-[#D4AF37]/40 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>Founder Operations & Resource Tracker</span>
+            </button>
+          )}
+
+          <div className="pt-2 border-t border-white/10">
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
                 onOpenOrder();
               }}
-              className="w-full py-3 rounded-xl text-center text-xs font-bold uppercase tracking-wider text-[#140306] bg-gradient-to-r from-[#F6E3B4] via-[#D4AF37] to-[#A4771F] flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl text-center text-xs font-bold uppercase tracking-wider text-[#140306] bg-gradient-to-r from-[#F6E3B4] via-[#D4AF37] to-[#A4771F] flex items-center justify-center gap-2 cursor-pointer"
             >
               <MessageCircle className="w-4 h-4" />
               <span>Pre-Order on WhatsApp</span>

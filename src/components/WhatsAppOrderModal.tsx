@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Sparkles, MessageCircle, MapPin, CheckCircle, Package } from 'lucide-react';
 import { FRAGRANCES, SIZE_OPTIONS, PICKUP_STATIONS } from '../data/fragrances';
+import { saveOrder } from '../utils/orderTracker';
 import confetti from 'canvas-confetti';
 
 interface WhatsAppOrderModalProps {
@@ -26,6 +27,10 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
   const [pickupStationId, setPickupStationId] = useState<string>(PICKUP_STATIONS[0].id);
   const [studentName, setStudentName] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  
+  // Animation state for smooth fluid pop gesture
+  const [rendered, setRendered] = useState(false);
+  const [animateIn, setAnimateIn] = useState(false);
 
   useEffect(() => {
     if (preselectedFragranceId) setSelectedFragranceId(preselectedFragranceId);
@@ -35,7 +40,19 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
     if (preselectedSize) setSelectedSize(preselectedSize);
   }, [preselectedSize]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      setRendered(true);
+      const timer = setTimeout(() => setAnimateIn(true), 20);
+      return () => clearTimeout(timer);
+    } else {
+      setAnimateIn(false);
+      const timer = setTimeout(() => setRendered(false), 250);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  if (!rendered) return null;
 
   const currentFragrance = FRAGRANCES.find(f => f.id === selectedFragranceId) || FRAGRANCES[0];
   const currentSizeOption = SIZE_OPTIONS.find(s => s.size === selectedSize) || SIZE_OPTIONS[1];
@@ -47,20 +64,22 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
   // Founder WhatsApp number (+60 11-4009 7486)
   const FOUNDER_WHATSAPP = '601140097486';
 
+  // Bulletproof WhatsApp message without emojis that cause  replacement characters
   const generateWhatsAppMessage = () => {
     const greeting = studentName.trim()
       ? `Hi UTM Fragrance House! My name is ${studentName.trim()}.`
       : `Hi UTM Fragrance House!`;
 
+    // Clean ASCII bullet points and WhatsApp bold markdown
     const message = `${greeting}
 I would like to place an order for Drop 01:
 
-✨ Fragrance: ${currentFragrance.name} (${currentFragrance.brand})
-📦 Flacon Size: ${currentSizeOption.size} (${currentSizeOption.label})
-🔢 Quantity: ${quantity} bottle(s)
-💰 Total: RM ${totalPrice} (Cash on Delivery / DuitNow QR)
-📍 Preferred Campus Pickup: ${currentStation.name} (${currentStation.detail})
-${notes.trim() ? `📝 Special Note: ${notes.trim()}` : ''}
+- Fragrance: ${currentFragrance.name} (${currentFragrance.brand})
+- Flacon Size: ${currentSizeOption.size} (${currentSizeOption.label})
+- Quantity: ${quantity} bottle(s)
+- Total: RM ${totalPrice} (Cash on Delivery / DuitNow QR)
+- Preferred Pickup: ${currentStation.name} (${currentStation.detail.replace('•', '-')})
+${notes.trim() ? `- Special Note: ${notes.trim()}` : ''}
 
 Please confirm my reservation and batch serial number. Thank you!`;
 
@@ -68,24 +87,48 @@ Please confirm my reservation and batch serial number. Thank you!`;
   };
 
   const handleSendOrder = () => {
-    // Fire celebratory confetti!
+    // 1. Automatically save to order & resource tracker
+    saveOrder({
+      studentName: studentName.trim() || 'Anonymous Student',
+      fragranceId: currentFragrance.id,
+      fragranceName: currentFragrance.name,
+      brand: currentFragrance.brand,
+      size: currentSizeOption.size,
+      quantity,
+      totalPrice,
+      pickupStation: currentStation.name,
+      notes: notes.trim(),
+    });
+
+    // 2. Fire celebratory confetti
     confetti({
-      particleCount: 80,
+      particleCount: 90,
       spread: 70,
       origin: { y: 0.6 },
       colors: ['#D4AF37', '#F6E3B4', '#851628'],
     });
 
+    // 3. Open WhatsApp cleanly
     const encodedText = encodeURIComponent(generateWhatsAppMessage());
     const whatsappUrl = `https://wa.me/${FOUNDER_WHATSAPP}?text=${encodedText}`;
-
-    // Open WhatsApp in new tab
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-[#140306] border border-[#D4AF37]/40 rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 transition-all duration-300 ease-out ${
+        animateIn
+          ? 'bg-black/80 backdrop-blur-md opacity-100'
+          : 'bg-black/0 backdrop-blur-none opacity-0 pointer-events-none'
+      }`}
+    >
+      <div
+        className={`relative w-full max-w-2xl bg-[#140306] border border-[#D4AF37]/40 rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) transform ${
+          animateIn
+            ? 'scale-100 translate-y-0 opacity-100 shadow-[0_20px_60px_-15px_rgba(212,175,55,0.3)]'
+            : 'scale-90 translate-y-8 opacity-0'
+        }`}
+      >
         
         {/* Modal Header */}
         <div className="p-5 sm:p-6 bg-gradient-to-r from-[#2a070f] via-[#1a040a] to-[#2a070f] border-b border-[#D4AF37]/25 flex items-center justify-between">
@@ -105,7 +148,7 @@ Please confirm my reservation and batch serial number. Thank you!`;
 
           <button
             onClick={onClose}
-            className="p-2 text-[#A59283] hover:text-white rounded-full hover:bg-white/10 transition-colors"
+            className="p-2 text-[#A59283] hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -176,7 +219,7 @@ Please confirm my reservation and batch serial number. Thank you!`;
               <button
                 type="button"
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-8 h-8 rounded-lg bg-[#27060f] border border-[#D4AF37]/30 text-white font-bold flex items-center justify-center hover:bg-[#3d0b17]"
+                className="w-8 h-8 rounded-lg bg-[#27060f] border border-[#D4AF37]/30 text-white font-bold flex items-center justify-center hover:bg-[#3d0b17] cursor-pointer"
               >
                 -
               </button>
@@ -186,7 +229,7 @@ Please confirm my reservation and batch serial number. Thank you!`;
               <button
                 type="button"
                 onClick={() => setQuantity(quantity + 1)}
-                className="w-8 h-8 rounded-lg bg-[#27060f] border border-[#D4AF37]/30 text-white font-bold flex items-center justify-center hover:bg-[#3d0b17]"
+                className="w-8 h-8 rounded-lg bg-[#27060f] border border-[#D4AF37]/30 text-white font-bold flex items-center justify-center hover:bg-[#3d0b17] cursor-pointer"
               >
                 +
               </button>
@@ -235,7 +278,7 @@ Please confirm my reservation and batch serial number. Thank you!`;
                 type="text"
                 value={studentName}
                 onChange={e => setStudentName(e.target.value)}
-                placeholder="e.g. Adam / Sarah"
+                placeholder="e.g. Yaser / Sarah"
                 className="w-full bg-[#1b050b] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-[#78695d] focus:outline-none focus:border-[#D4AF37]"
               />
             </div>
@@ -257,7 +300,7 @@ Please confirm my reservation and batch serial number. Thank you!`;
           {/* Price Calculation Summary */}
           <div className="bg-[#1b050b] border border-[#D4AF37]/30 rounded-2xl p-4 space-y-2">
             <div className="flex justify-between text-xs text-[#C5B3A3]">
-              <span>{currentFragrance.name} ({currentSizeOption.size} × {quantity})</span>
+              <span>{currentFragrance.name} ({currentSizeOption.size} x {quantity})</span>
               <span>RM {totalPrice}</span>
             </div>
             <div className="flex justify-between text-xs text-[#C5B3A3]">
@@ -278,15 +321,16 @@ Please confirm my reservation and batch serial number. Thank you!`;
         <div className="p-5 bg-gradient-to-r from-[#24060d] to-[#140306] border-t border-[#D4AF37]/25 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-[11px] text-[#A59283] flex items-center gap-2">
             <Package className="w-4 h-4 text-[#D4AF37]" />
-            <span>Opens WhatsApp directly with founder +60 11-4009 7486</span>
+            <span>Sends direct formatted order to founder (+60 11-4009 7486)</span>
           </div>
 
           <button
+            type="button"
             onClick={handleSendOrder}
             className="w-full sm:w-auto px-7 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider text-[#140306] bg-gradient-to-r from-[#F6E3B4] via-[#D4AF37] to-[#A4771F] hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2.5 shadow-xl shadow-[#D4AF37]/20 cursor-pointer"
           >
             <MessageCircle className="w-4 h-4" />
-            <span>Send Order via WhatsApp</span>
+            <span>Confirm & Open WhatsApp</span>
           </button>
         </div>
 

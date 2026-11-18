@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { Fragrance } from '../data/fragrances';
 import { Clock, Wind, Sparkles, ChevronDown, ChevronUp, Layers } from 'lucide-react';
 
 interface FragranceCardProps {
   fragrance: Fragrance;
+  isNotesOpen: boolean;
+  onToggleNotes: () => void;
   onSelectForOrder: (fragranceId: string) => void;
 }
 
-export const FragranceCard: React.FC<FragranceCardProps> = ({ fragrance, onSelectForOrder }) => {
-  const [showNotes, setShowNotes] = useState(false);
-
+export const FragranceCard: React.FC<FragranceCardProps> = ({
+  fragrance,
+  isNotesOpen,
+  onToggleNotes,
+  onSelectForOrder,
+}) => {
   return (
-    <div className="glass-panel glass-panel-hover rounded-2xl overflow-hidden flex flex-col h-full relative group">
+    <div className="glass-panel glass-panel-hover rounded-2xl overflow-hidden flex flex-col justify-between relative group transition-all duration-300">
       
       {/* Top Banner Gradient & Accent */}
       <div className={`h-2 w-full bg-gradient-to-r ${fragrance.colorGradient}`} />
@@ -42,7 +47,7 @@ export const FragranceCard: React.FC<FragranceCardProps> = ({ fragrance, onSelec
         </div>
 
         {/* Narrative Description */}
-        <p className="text-xs sm:text-sm text-[#C9B7A7] leading-relaxed mb-5 flex-grow">
+        <p className="text-xs sm:text-sm text-[#C9B7A7] leading-relaxed mb-5">
           {fragrance.description}
         </p>
 
@@ -67,38 +72,44 @@ export const FragranceCard: React.FC<FragranceCardProps> = ({ fragrance, onSelec
         {/* Scent Notes Pyramid Accordion Toggle */}
         <div className="mb-5">
           <button
-            onClick={() => setShowNotes(!showNotes)}
+            type="button"
+            onClick={onToggleNotes}
             className="w-full flex items-center justify-between text-xs font-semibold text-[#D4AF37] hover:text-[#F6E3B4] py-2 px-3 rounded-lg bg-[#250810]/70 border border-[#D4AF37]/20 transition-all cursor-pointer"
           >
             <span className="flex items-center gap-2">
               <Layers className="w-3.5 h-3.5" />
-              <span>{showNotes ? 'Hide Olfactory Pyramid' : 'Explore Scent Notes (Top · Heart · Base)'}</span>
+              <span>{isNotesOpen ? `Hide ${fragrance.name} Notes` : `Explore ${fragrance.name} Notes`}</span>
             </span>
-            {showNotes ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {isNotesOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
 
-          {showNotes && (
-            <div className="mt-3 p-3.5 bg-[#140306]/95 border border-[#D4AF37]/20 rounded-xl space-y-2.5 text-xs">
+          {/* Animated Accordion Container */}
+          <div
+            className={`transition-all duration-300 ease-in-out overflow-hidden ${
+              isNotesOpen ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="p-3.5 bg-[#140306]/95 border border-[#D4AF37]/25 rounded-xl space-y-2.5 text-xs shadow-inner">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F6E3B4] block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F6E3B4] block mb-0.5">
                   Top Notes (First 15–30 Mins)
                 </span>
                 <span className="text-[#C9B7A7]">{fragrance.notes.top.join(' • ')}</span>
               </div>
               <div className="pt-2 border-t border-white/5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F6E3B4] block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F6E3B4] block mb-0.5">
                   Heart / Middle (Hours 1–4)
                 </span>
                 <span className="text-[#C9B7A7]">{fragrance.notes.heart.join(' • ')}</span>
               </div>
               <div className="pt-2 border-t border-white/5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F6E3B4] block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F6E3B4] block mb-0.5">
                   Base Notes (Dry Down 6–10 Hours)
                 </span>
                 <span className="text-[#C9B7A7]">{fragrance.notes.base.join(' • ')}</span>
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Occasion / Recommended For */}
@@ -107,16 +118,20 @@ export const FragranceCard: React.FC<FragranceCardProps> = ({ fragrance, onSelec
           {fragrance.recommendedFor}
         </div>
 
-        {/* Action Button */}
+      </div>
+
+      {/* Action Button pinned at bottom */}
+      <div className="p-6 pt-0 sm:p-7 sm:pt-0">
         <button
+          type="button"
           onClick={() => onSelectForOrder(fragrance.id)}
           className="w-full py-3 rounded-xl font-bold text-xs tracking-wider uppercase text-[#140306] bg-gradient-to-r from-[#F6E3B4] via-[#D4AF37] to-[#A4771F] hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#D4AF37]/15 cursor-pointer"
         >
           <Sparkles className="w-3.5 h-3.5" />
           <span>Pre-Order {fragrance.name}</span>
         </button>
-
       </div>
+
     </div>
   );
 };

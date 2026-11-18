@@ -10,6 +10,7 @@ interface FragranceListProps {
 export const FragranceList: React.FC<FragranceListProps> = ({ onSelectForOrder }) => {
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [expandedNotesId, setExpandedNotesId] = useState<string | null>(null);
 
   const filterTabs = [
     { id: 'all', label: 'All Debut Scents' },
@@ -18,6 +19,10 @@ export const FragranceList: React.FC<FragranceListProps> = ({ onSelectForOrder }
     { id: 'spicy', label: 'Spicy & Amber' },
     { id: 'woody', label: 'Woody & Floral' },
   ];
+
+  const handleToggleNotes = (id: string) => {
+    setExpandedNotesId(prev => (prev === id ? null : id));
+  };
 
   const filteredFragrances = FRAGRANCES.filter((item: Fragrance) => {
     const matchesFilter = activeFilter === 'all' || item.family === activeFilter;
@@ -84,11 +89,13 @@ export const FragranceList: React.FC<FragranceListProps> = ({ onSelectForOrder }
 
       {/* Fragrances Grid */}
       {filteredFragrances.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
           {filteredFragrances.map(fragrance => (
             <FragranceCard
               key={fragrance.id}
               fragrance={fragrance}
+              isNotesOpen={expandedNotesId === fragrance.id}
+              onToggleNotes={() => handleToggleNotes(fragrance.id)}
               onSelectForOrder={onSelectForOrder}
             />
           ))}
