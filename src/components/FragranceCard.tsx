@@ -21,12 +21,35 @@ export const FragranceCard: React.FC<FragranceCardProps> = ({
       {/* Top Banner Gradient & Accent */}
       <div className={`h-2 w-full bg-gradient-to-r ${fragrance.colorGradient}`} />
 
+      {/* Fragrance Flacon Product Visual Showcase */}
+      <div className="relative w-full aspect-[4/3] bg-gradient-to-b from-[#1c050b]/90 to-[#100205] p-5 flex items-center justify-center overflow-hidden border-b border-[#D4AF37]/15">
+        {/* Ambient radial glow */}
+        <div className="absolute inset-0 bg-radial from-[#D4AF37]/10 via-transparent to-transparent pointer-events-none" />
+        
+        <img
+          src={fragrance.image}
+          alt={`${fragrance.name} Flacon (${fragrance.brand})`}
+          className="h-full w-auto max-h-[170px] object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.8)] group-hover:scale-108 transition-transform duration-500 z-10"
+          onError={(e) => {
+            // Graceful fallback if image is loading
+            (e.target as HTMLElement).style.display = 'none';
+          }}
+        />
+
+        {/* Top-Right Badge */}
+        <div className="absolute top-3.5 right-3.5 z-20">
+          <span className="text-[10px] tracking-wider uppercase px-2.5 py-1 rounded-full bg-[#120306]/90 border border-[#D4AF37]/40 text-[#F6E3B4] font-semibold backdrop-blur-md shadow-lg">
+            {fragrance.badge || 'Batch 01'}
+          </span>
+        </div>
+      </div>
+
       <div className="p-6 sm:p-7 flex flex-col flex-grow">
         
-        {/* Top Meta: Badge & Scent Family */}
-        <div className="flex items-center justify-between gap-2 mb-4">
-          <span className="text-[10px] tracking-wider uppercase px-2.5 py-1 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/35 text-[#F6E3B4] font-semibold">
-            {fragrance.badge || 'Batch 01'}
+        {/* Scent Family Subtitle */}
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[#D4AF37]">
+            {fragrance.brand}
           </span>
           <span className="text-[11px] font-medium text-[#C5B3A3]">
             {fragrance.familyLabel}
@@ -35,9 +58,6 @@ export const FragranceCard: React.FC<FragranceCardProps> = ({
 
         {/* Perfume Identity */}
         <div className="mb-3">
-          <div className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[#D4AF37] mb-1">
-            {fragrance.brand}
-          </div>
           <h3 className="font-cinzel text-2xl font-bold text-white group-hover:text-[#F6E3B4] transition-colors">
             {fragrance.name}
           </h3>

@@ -168,15 +168,22 @@ Please confirm my reservation and batch serial number. Thank you!`;
                   key={f.id}
                   onClick={() => setSelectedFragranceId(f.id)}
                   type="button"
-                  className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
+                  className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer flex items-center gap-2.5 ${
                     selectedFragranceId === f.id
                       ? 'bg-[#310913] border-[#D4AF37] shadow-md shadow-[#D4AF37]/20 text-white'
                       : 'bg-[#1b050b]/80 border-white/10 text-[#C9B7A7] hover:border-[#D4AF37]/40'
                   }`}
                 >
-                  <div className="text-[10px] text-[#D4AF37] font-semibold truncate">{f.brand.replace('Inspired by ', '')}</div>
-                  <div className="text-sm font-bold font-cinzel text-white truncate">{f.name}</div>
-                  <div className="text-[10px] text-[#A59283] truncate">{f.familyLabel}</div>
+                  <img
+                    src={f.image}
+                    alt={f.name}
+                    className="w-10 h-10 object-contain rounded-lg bg-[#140306] p-0.5 border border-white/5 flex-shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <div className="text-[9px] text-[#D4AF37] font-semibold truncate">{f.brand.replace('Inspired by ', '')}</div>
+                    <div className="text-xs font-bold font-cinzel text-white truncate">{f.name}</div>
+                    <div className="text-[9px] text-[#A59283] truncate">{f.familyLabel}</div>
+                  </div>
                 </button>
               ))}
             </div>

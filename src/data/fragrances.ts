@@ -18,6 +18,7 @@ export interface Fragrance {
   longevity: string;
   recommendedFor: string;
   colorGradient: string;
+  image: string;
 }
 
 export interface SizeOption {
@@ -68,7 +69,8 @@ export const FRAGRANCES: Fragrance[] = [
     sillage: '8/10 Moderate-Loud',
     longevity: '7–9 Hours',
     recommendedFor: 'Hot afternoon campus walks, lecture halls, clean luxury statement',
-    colorGradient: 'from-amber-500/20 via-orange-900/10 to-transparent'
+    colorGradient: 'from-amber-500/20 via-orange-900/10 to-transparent',
+    image: '/images/perfumes/lv-imagination.jpg'
   },
   {
     id: 'dior-sauvage',
@@ -87,7 +89,8 @@ export const FRAGRANCES: Fragrance[] = [
     sillage: '9.5/10 High Projection',
     longevity: '8–10+ Hours',
     recommendedFor: 'Evening hangouts, presentations, high-impact first impressions',
-    colorGradient: 'from-blue-600/20 via-indigo-950/20 to-transparent'
+    colorGradient: 'from-blue-600/20 via-indigo-950/20 to-transparent',
+    image: '/images/perfumes/dior-sauvage.jpg'
   },
   {
     id: 'versace-eros',
@@ -106,7 +109,8 @@ export const FRAGRANCES: Fragrance[] = [
     sillage: '9/10 Room Filler',
     longevity: '8–10 Hours',
     recommendedFor: 'Weekend vibes, casual dining, gym, clubbing & dates',
-    colorGradient: 'from-emerald-500/20 via-teal-950/20 to-transparent'
+    colorGradient: 'from-emerald-500/20 via-teal-950/20 to-transparent',
+    image: '/images/perfumes/versace-eros.jpg'
   },
   {
     id: 'jpg-le-male',
@@ -125,7 +129,8 @@ export const FRAGRANCES: Fragrance[] = [
     sillage: '8.5/10 Warm & Enveloping',
     longevity: '8–10 Hours',
     recommendedFor: 'Study dates, library sessions, air-conditioned lecture halls',
-    colorGradient: 'from-amber-600/20 via-yellow-950/20 to-transparent'
+    colorGradient: 'from-amber-600/20 via-yellow-950/20 to-transparent',
+    image: '/images/perfumes/jpg-le-male.jpg'
   },
   {
     id: 'armani-adg',
@@ -144,7 +149,8 @@ export const FRAGRANCES: Fragrance[] = [
     sillage: '7.5/10 Crisp & Clean',
     longevity: '6–8 Hours',
     recommendedFor: 'Daily signature, gym workouts, intense hot days',
-    colorGradient: 'from-cyan-500/20 via-slate-900/20 to-transparent'
+    colorGradient: 'from-cyan-500/20 via-slate-900/20 to-transparent',
+    image: '/images/perfumes/armani-adg.jpg'
   },
   {
     id: 'ysl-myslf',
@@ -163,7 +169,8 @@ export const FRAGRANCES: Fragrance[] = [
     sillage: '8/10 Sophisticated Trail',
     longevity: '7–9 Hours',
     recommendedFor: 'Formal campus dinners, daily signature wear, professional meetings',
-    colorGradient: 'from-rose-500/20 via-purple-950/20 to-transparent'
+    colorGradient: 'from-rose-500/20 via-purple-950/20 to-transparent',
+    image: '/images/perfumes/ysl-myslf.jpg'
   }
 ];
 
