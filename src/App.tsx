@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { DropCountdown } from './components/DropCountdown';
@@ -10,12 +10,35 @@ import { FAQ } from './components/FAQ';
 import { Footer } from './components/Footer';
 import { WhatsAppOrderModal } from './components/WhatsAppOrderModal';
 import { FounderDashboardModal } from './components/FounderDashboardModal';
+import { FounderPinModal } from './components/FounderPinModal';
 
 export const App: React.FC = () => {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [selectedFragranceId, setSelectedFragranceId] = useState<string | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<'30ml' | '50ml' | '100ml' | undefined>(undefined);
+
+  // Easter egg 5-click tracker on UTM Logo Crest
+  const crestClickCountRef = useRef(0);
+  const crestTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleCrestClick = () => {
+    crestClickCountRef.current += 1;
+
+    if (crestClickCountRef.current >= 5) {
+      crestClickCountRef.current = 0;
+      if (crestTimerRef.current) clearTimeout(crestTimerRef.current);
+      setIsPinModalOpen(true);
+      return;
+    }
+
+    // Reset clicks if user pauses for more than 2.5 seconds
+    if (crestTimerRef.current) clearTimeout(crestTimerRef.current);
+    crestTimerRef.current = setTimeout(() => {
+      crestClickCountRef.current = 0;
+    }, 2500);
+  };
 
   const handleOpenOrder = (size?: '30ml' | '50ml' | '100ml') => {
     if (size) setSelectedSize(size);
@@ -36,7 +59,7 @@ export const App: React.FC = () => {
       {/* Sticky Navigation */}
       <Navbar
         onOpenOrder={() => handleOpenOrder()}
-        onOpenDashboard={() => setIsDashboardOpen(true)}
+        onCrestClick={handleCrestClick}
       />
 
       {/* Main Content */}
@@ -51,7 +74,7 @@ export const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <Footer onOpenDashboard={() => setIsDashboardOpen(true)} />
+      <Footer />
 
       {/* Interactive WhatsApp Order Creator Modal */}
       <WhatsAppOrderModal
@@ -59,6 +82,13 @@ export const App: React.FC = () => {
         onClose={handleCloseOrder}
         preselectedFragranceId={selectedFragranceId}
         preselectedSize={selectedSize}
+      />
+
+      {/* Secret Founder PIN Authentication Modal */}
+      <FounderPinModal
+        isOpen={isPinModalOpen}
+        onClose={() => setIsPinModalOpen(false)}
+        onSuccess={() => setIsDashboardOpen(true)}
       />
 
       {/* Founder Operations & Inventory Resource Tracker */}

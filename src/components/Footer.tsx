@@ -1,11 +1,7 @@
 import React from 'react';
-import { MessageCircle, ArrowUp, BarChart3 } from 'lucide-react';
+import { MessageCircle, ArrowUp } from 'lucide-react';
 
-interface FooterProps {
-  onOpenDashboard?: () => void;
-}
-
-export const Footer: React.FC<FooterProps> = ({ onOpenDashboard }) => {
+export const Footer: React.FC = () => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -43,7 +39,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDashboard }) => {
             {/* Official Social Icons (High Contrast & Clear) */}
             <div className="flex items-center gap-4">
               
-              {/* Instagram Official - High Contrast Gold & Gradient */}
+              {/* Instagram Official */}
               <a
                 href="https://www.instagram.com/utm.fragrance?vrfl=M2lzYzV2MGs5dmxk&utm_source=qr"
                 target="_blank"
@@ -116,7 +112,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDashboard }) => {
             </ul>
           </div>
 
-          {/* Direct Contact & Founder View */}
+          {/* Direct Contact */}
           <div>
             <h4 className="font-cinzel text-xs font-bold uppercase tracking-widest text-white mb-4">
               Direct Inquiries
@@ -133,19 +129,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDashboard }) => {
               </a>
               <p className="pt-2">Campus Fulfillment:</p>
               <span className="text-[#C5B3A3] block">Universiti Teknologi Malaysia (UTM), 81310 Skudai, Johor</span>
-              
-              {/* Founder Operations Tracker Trigger */}
-              {onOpenDashboard && (
-                <div className="pt-3">
-                  <button
-                    onClick={onOpenDashboard}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#D4AF37] hover:text-[#F6E3B4] cursor-pointer"
-                  >
-                    <BarChart3 className="w-3.5 h-3.5" />
-                    <span>Founder Operations Tracker</span>
-                  </button>
-                </div>
-              )}
             </div>
           </div>
 
