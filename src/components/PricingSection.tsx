@@ -17,7 +17,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onOpenOrder }) =
             Transparent Campus Pricing
           </span>
           <h2 className="font-cinzel text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-            Engineered Flacon Sizes
+            Engineered Bottle Sizes
           </h2>
           <p className="text-sm sm:text-base text-[#D4C4B4] leading-relaxed">
             Formulated based on our 132-student campus survey. Every bottle is hand-crimped with an airtight gold atomizer to prevent evaporation and preserve pure European fragrance notes.

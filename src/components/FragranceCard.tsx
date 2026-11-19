@@ -21,14 +21,14 @@ export const FragranceCard: React.FC<FragranceCardProps> = ({
       {/* Top Banner Gradient & Accent */}
       <div className={`h-2 w-full bg-gradient-to-r ${fragrance.colorGradient}`} />
 
-      {/* Fragrance Flacon Product Visual Showcase */}
+      {/* Perfume Bottle Product Visual */}
       <div className="relative w-full aspect-[4/3] bg-gradient-to-b from-[#1c050b]/90 to-[#100205] p-5 flex items-center justify-center overflow-hidden border-b border-[#D4AF37]/15">
         {/* Ambient radial glow */}
         <div className="absolute inset-0 bg-radial from-[#D4AF37]/10 via-transparent to-transparent pointer-events-none" />
         
         <img
           src={fragrance.image}
-          alt={`${fragrance.name} Flacon (${fragrance.brand})`}
+          alt={`${fragrance.fullName} bottle`}
           className="h-full w-auto max-h-[170px] object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.8)] group-hover:scale-108 transition-transform duration-500 z-10"
           onError={(e) => {
             // Graceful fallback if image is loading
@@ -46,7 +46,7 @@ export const FragranceCard: React.FC<FragranceCardProps> = ({
 
       <div className="p-6 sm:p-7 flex flex-col flex-grow">
         
-        {/* Scent Family Subtitle */}
+        {/* Scent Family & Brand */}
         <div className="flex items-center justify-between gap-2 mb-3">
           <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[#D4AF37]">
             {fragrance.brand}
@@ -59,7 +59,7 @@ export const FragranceCard: React.FC<FragranceCardProps> = ({
         {/* Perfume Identity */}
         <div className="mb-3">
           <h3 className="font-cinzel text-2xl font-bold text-white group-hover:text-[#F6E3B4] transition-colors">
-            {fragrance.name}
+            {fragrance.fullName}
           </h3>
           <div className="text-xs text-[#E0D0C2] font-medium mt-1">
             {fragrance.subtitle}
@@ -71,7 +71,7 @@ export const FragranceCard: React.FC<FragranceCardProps> = ({
           {fragrance.description}
         </p>
 
-        {/* Performance Badges: Longevity & Sillage */}
+        {/* Performance Badges: Longevity & Projection */}
         <div className="grid grid-cols-2 gap-2 bg-[#120306]/80 p-3 rounded-xl border border-white/5 mb-5">
           <div className="flex items-center gap-2">
             <Clock className="w-3.5 h-3.5 text-[#D4AF37] flex-shrink-0" />
@@ -83,8 +83,8 @@ export const FragranceCard: React.FC<FragranceCardProps> = ({
           <div className="flex items-center gap-2">
             <Wind className="w-3.5 h-3.5 text-[#D4AF37] flex-shrink-0" />
             <div>
-              <div className="text-[10px] text-[#A59283] uppercase">Sillage</div>
-              <div className="text-xs font-semibold text-white">{fragrance.sillage.split(' ')[0]}</div>
+              <div className="text-[10px] text-[#A59283] uppercase">Projection</div>
+              <div className="text-xs font-semibold text-white">{fragrance.projection.split(' ')[0]}</div>
             </div>
           </div>
         </div>
@@ -98,7 +98,7 @@ export const FragranceCard: React.FC<FragranceCardProps> = ({
           >
             <span className="flex items-center gap-2">
               <Layers className="w-3.5 h-3.5" />
-              <span>{isNotesOpen ? `Hide ${fragrance.name} Notes` : `Explore ${fragrance.name} Notes`}</span>
+              <span>{isNotesOpen ? `Hide Scent Notes` : `Explore Scent Notes (Top · Heart · Base)`}</span>
             </span>
             {isNotesOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -148,7 +148,7 @@ export const FragranceCard: React.FC<FragranceCardProps> = ({
           className="w-full py-3 rounded-xl font-bold text-xs tracking-wider uppercase text-[#140306] bg-gradient-to-r from-[#F6E3B4] via-[#D4AF37] to-[#A4771F] hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#D4AF37]/15 cursor-pointer"
         >
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Pre-Order {fragrance.name}</span>
+          <span>Pre-Order {fragrance.fullName}</span>
         </button>
       </div>
 

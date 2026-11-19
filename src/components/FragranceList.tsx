@@ -28,6 +28,7 @@ export const FragranceList: React.FC<FragranceListProps> = ({ onSelectForOrder }
     const matchesFilter = activeFilter === 'all' || item.family === activeFilter;
     const matchesSearch =
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.notes.top.some(n => n.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -49,7 +50,7 @@ export const FragranceList: React.FC<FragranceListProps> = ({ onSelectForOrder }
           6 Confirmed Debut Scents
         </h2>
         <p className="text-sm sm:text-base text-[#D4C4B4] leading-relaxed">
-          Formulated directly from pure European fine fragrance oils. Every formulation has been tested in Johor Bahru’s tropical climate for projection, sillage, and all-day stability.
+          Formulated directly from pure European fine fragrance oils. Every formulation has been tested in Johor Bahru’s tropical climate for projection, longevity, and all-day stability.
         </p>
       </div>
 

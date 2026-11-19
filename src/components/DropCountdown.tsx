@@ -52,7 +52,7 @@ export const DropCountdown: React.FC = () => {
               Drop 01 Official Release
             </h3>
             <p className="text-xs sm:text-sm text-[#D8C7B8] max-w-md mt-1">
-              Strictly capped at 70 numbered flacons (<span className="text-[#F6E3B4] font-semibold">#01/70 to #70/70</span>). 
+              Strictly capped at 70 numbered bottles (<span className="text-[#F6E3B4] font-semibold">#01/70 to #70/70</span>). 
               Each bottle includes physical compounding certificate & serial stamp.
             </p>
           </div>

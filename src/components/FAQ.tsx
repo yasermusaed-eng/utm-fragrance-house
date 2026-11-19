@@ -20,7 +20,7 @@ const FAQS: FAQItem[] = [
   {
     question: 'How does physical campus fulfillment work?',
     answer:
-      'Zero shipping fees! Simply select your preferred campus hub when placing your order (Arked Meranti or PSZ Library Foyer). When your batch serial is compounded, we coordinate with you via WhatsApp to hand your flacon over during designated station hours.'
+      'Zero shipping fees! Simply select your preferred campus hub when placing your order (Arked Meranti or PSZ Library Foyer). When your batch serial is compounded, we coordinate with you via WhatsApp to hand your bottle over during designated station hours.'
   },
   {
     question: 'What payment methods do you accept at collection?',
@@ -30,7 +30,7 @@ const FAQS: FAQItem[] = [
   {
     question: 'What is the "Drop 01 · Founders Edition"?',
     answer:
-      'Drop 01 is our official campus debut, capped at exactly 70 numbered flacons (#01/70 to #70/70). Every bottle in this drop includes physical compounding certification and access to exclusive future community refills and custom scent votings.'
+      'Drop 01 is our official campus debut, capped at exactly 70 numbered bottles (#01/70 to #70/70). Every bottle in this drop includes physical compounding certification and access to exclusive future community refills and custom scent votings.'
   }
 ];
 

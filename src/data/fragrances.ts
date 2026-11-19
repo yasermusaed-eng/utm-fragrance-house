@@ -7,14 +7,15 @@ export interface ScentNotes {
 export interface Fragrance {
   id: string;
   name: string;
-  brand: string;
+  fullName: string;      // e.g. "Louis Vuitton Imagination"
+  brand: string;         // e.g. "Louis Vuitton"
   subtitle: string;
   family: 'fresh' | 'sweet' | 'woody' | 'aquatic' | 'spicy';
   familyLabel: string;
   badge?: string;
   description: string;
   notes: ScentNotes;
-  sillage: string;
+  projection: string;    // formerly "sillage"
   longevity: string;
   recommendedFor: string;
   colorGradient: string;
@@ -46,8 +47,8 @@ export const SIZE_OPTIONS: SizeOption[] = [
   {
     size: '100ml',
     price: 119,
-    label: 'Luxury Flacon',
-    description: 'Maximum value flacon for true daily scent enthusiasts.'
+    label: 'Luxury Bottle',
+    description: 'Maximum value bottle for true daily scent enthusiasts.'
   }
 ];
 
@@ -55,7 +56,8 @@ export const FRAGRANCES: Fragrance[] = [
   {
     id: 'lv-imagination',
     name: 'Imagination',
-    brand: 'Inspired by Louis Vuitton',
+    fullName: 'Louis Vuitton Imagination',
+    brand: 'Louis Vuitton',
     subtitle: 'Calabrian Bergamot, Black Tea & Ambergris',
     family: 'aquatic',
     familyLabel: 'Fresh / Aquatic / Citrus',
@@ -66,7 +68,7 @@ export const FRAGRANCES: Fragrance[] = [
       heart: ['Ceylon Black Tea', 'Nigerian Ginger', 'Tunisian Neroli'],
       base: ['Ambroxan', 'Guaiac Wood', 'Olibanum Frankincense']
     },
-    sillage: '8/10 Moderate-Loud',
+    projection: '8/10 Moderate-Loud',
     longevity: '7–9 Hours',
     recommendedFor: 'Hot afternoon campus walks, lecture halls, clean luxury statement',
     colorGradient: 'from-amber-500/20 via-orange-900/10 to-transparent',
@@ -75,7 +77,8 @@ export const FRAGRANCES: Fragrance[] = [
   {
     id: 'dior-sauvage',
     name: 'Sauvage',
-    brand: 'Inspired by Dior',
+    fullName: 'Dior Sauvage',
+    brand: 'Dior',
     subtitle: 'Sichuan Pepper, Ambroxan & Crisp Bergamot',
     family: 'spicy',
     familyLabel: 'Aromatic / Fresh Spicy / Woody',
@@ -86,7 +89,7 @@ export const FRAGRANCES: Fragrance[] = [
       heart: ['Sichuan Pepper', 'Provence Lavender', 'Star Anise', 'Nutmeg'],
       base: ['Ambroxan', 'Papua New Guinean Vanilla', 'Atlas Cedar']
     },
-    sillage: '9.5/10 High Projection',
+    projection: '9.5/10 High Projection',
     longevity: '8–10+ Hours',
     recommendedFor: 'Evening hangouts, presentations, high-impact first impressions',
     colorGradient: 'from-blue-600/20 via-indigo-950/20 to-transparent',
@@ -95,7 +98,8 @@ export const FRAGRANCES: Fragrance[] = [
   {
     id: 'versace-eros',
     name: 'Eros',
-    brand: 'Inspired by Versace',
+    fullName: 'Versace Eros',
+    brand: 'Versace',
     subtitle: 'Crisp Green Apple, Italian Mint & Tonka Bean',
     family: 'sweet',
     familyLabel: 'Fresh Sweet / Amber Vanilla',
@@ -106,7 +110,7 @@ export const FRAGRANCES: Fragrance[] = [
       heart: ['Venezuelan Tonka Bean', 'Ambroxan Crystals', 'Geranium Flower'],
       base: ['Madagascar Vanilla', 'Virginian Cedarwood', 'Oakmoss']
     },
-    sillage: '9/10 Room Filler',
+    projection: '9/10 Room Filler',
     longevity: '8–10 Hours',
     recommendedFor: 'Weekend vibes, casual dining, gym, clubbing & dates',
     colorGradient: 'from-emerald-500/20 via-teal-950/20 to-transparent',
@@ -115,7 +119,8 @@ export const FRAGRANCES: Fragrance[] = [
   {
     id: 'jpg-le-male',
     name: 'Le Male',
-    brand: 'Inspired by Jean Paul Gaultier',
+    fullName: 'Jean Paul Gaultier Le Male',
+    brand: 'Jean Paul Gaultier',
     subtitle: 'French Lavender, Fresh Mint & Warm Bourbon Vanilla',
     family: 'sweet',
     familyLabel: 'Warm Sweet / Amber / Fougere',
@@ -126,7 +131,7 @@ export const FRAGRANCES: Fragrance[] = [
       heart: ['Lavender', 'Orange Blossom', 'Cinnamon Bark'],
       base: ['Bourbon Vanilla', 'Tonka Bean', 'Sandalwood', 'Golden Amber']
     },
-    sillage: '8.5/10 Warm & Enveloping',
+    projection: '8.5/10 Warm & Enveloping',
     longevity: '8–10 Hours',
     recommendedFor: 'Study dates, library sessions, air-conditioned lecture halls',
     colorGradient: 'from-amber-600/20 via-yellow-950/20 to-transparent',
@@ -135,7 +140,8 @@ export const FRAGRANCES: Fragrance[] = [
   {
     id: 'armani-adg',
     name: 'Acqua Di Gio',
-    brand: 'Inspired by Giorgio Armani',
+    fullName: 'Giorgio Armani Acqua Di Gio',
+    brand: 'Giorgio Armani',
     subtitle: 'Ocean Breeze, Green Tangerine & Indonesian Patchouli',
     family: 'aquatic',
     familyLabel: 'Aquatic / Marine / Citrus',
@@ -146,7 +152,7 @@ export const FRAGRANCES: Fragrance[] = [
       heart: ['Rosemary', 'Lavender', 'Cypress Wood', 'Geranium'],
       base: ['Indonesian Patchouli', 'Mineral Amber', 'Clean Musk']
     },
-    sillage: '7.5/10 Crisp & Clean',
+    projection: '7.5/10 Crisp & Clean',
     longevity: '6–8 Hours',
     recommendedFor: 'Daily signature, gym workouts, intense hot days',
     colorGradient: 'from-cyan-500/20 via-slate-900/20 to-transparent',
@@ -155,7 +161,8 @@ export const FRAGRANCES: Fragrance[] = [
   {
     id: 'ysl-myslf',
     name: 'MYSLF',
-    brand: 'Inspired by Yves Saint Laurent',
+    fullName: 'Yves Saint Laurent MYSLF',
+    brand: 'Yves Saint Laurent',
     subtitle: 'Orange Blossom Absolute & Warm Ambrofix Wood',
     family: 'woody',
     familyLabel: 'Modern Woody / Floral / Clean',
@@ -166,7 +173,7 @@ export const FRAGRANCES: Fragrance[] = [
       heart: ['Tunisian Orange Blossom Absolute'],
       base: ['Ambrofix', 'Indonesian Patchouli Heart']
     },
-    sillage: '8/10 Sophisticated Trail',
+    projection: '8/10 Sophisticated Trail',
     longevity: '7–9 Hours',
     recommendedFor: 'Formal campus dinners, daily signature wear, professional meetings',
     colorGradient: 'from-rose-500/20 via-purple-950/20 to-transparent',

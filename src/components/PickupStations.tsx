@@ -15,7 +15,7 @@ export const PickupStations: React.FC = () => {
           Fulfillment Stations at UTM
         </h2>
         <p className="text-sm sm:text-base text-[#D4C4B4] leading-relaxed">
-          Skip expensive courier shipping fees and damaged packages. Collect your hand-compounded flacon directly at prime campus meeting points, inspect your bottle on the spot, and test smell before confirming.
+          Skip expensive courier shipping fees and damaged packages. Collect your hand-compounded bottle directly at prime campus meeting points, inspect your bottle on the spot, and test smell before confirming.
         </p>
       </div>
 

@@ -22,7 +22,7 @@ export const CompoundingCraft: React.FC = () => {
           </p>
 
           <p className="text-sm sm:text-base text-[#D8C7B8] leading-relaxed mb-8">
-            At UTM Fragrance House, every 50ml flacon is compounded with <strong className="text-[#F6E3B4]">exactly 10ml of pure European oil concentrate</strong>, blended precisely with cosmetic-grade perfumer's alcohol. The result is verified 6–8+ hours of projection that carries through back-to-back lectures, library study sessions, and the evening breeze.
+            At UTM Fragrance House, every 50ml bottle is compounded with <strong className="text-[#F6E3B4]">exactly 10ml of pure European oil concentrate</strong>, blended precisely with cosmetic-grade perfumer's alcohol. The result is verified 6–8+ hours of projection that carries through back-to-back lectures, library study sessions, and the evening breeze.
           </p>
 
           {/* Bullet proofs */}
@@ -85,7 +85,7 @@ export const CompoundingCraft: React.FC = () => {
                 <div className="h-full w-[80%] rounded-r-full bg-[#340b15]" />
               </div>
               <div className="flex justify-between text-[10px] text-[#8f7e71] mt-1.5">
-                <span>Concentrated Sillage Core</span>
+                <span>Concentrated Projection Core</span>
                 <span>Odorless Cosmetic Evaporative Carrier</span>
               </div>
             </div>

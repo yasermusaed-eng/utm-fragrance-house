@@ -34,7 +34,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrder }) => {
         <p className="text-sm sm:text-base md:text-lg text-[#E0D0C2] max-w-2xl mx-auto font-light leading-relaxed mb-10">
           We imported pure grade-A European fragrance oils and compound every single bottle at{' '}
           <strong className="text-[#F6E3B4] font-semibold">20% Eau de Parfum (EDP) concentration</strong>. 
-          No water-down shortcuts. Uncompromising 6–8+ hours sillage designed for Malaysia's tropical climate.
+          No water-down shortcuts. Uncompromising 6–8+ hours projection designed for Malaysia's tropical climate.
         </p>
 
         {/* CTA Button Group */}
@@ -72,7 +72,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrder }) => {
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div className="text-xl sm:text-2xl font-bold text-white font-cinzel">6–8+ Hrs</div>
-            <div className="text-xs text-[#C5B3A3] mt-1">Verified sillage through full lectures & gym</div>
+            <div className="text-xs text-[#C5B3A3] mt-1">Verified projection through full lectures & gym</div>
           </div>
 
           <div className="glass-panel p-4 sm:p-5 rounded-2xl">
@@ -80,7 +80,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenOrder }) => {
               <span className="text-sm font-bold">RM</span>
             </div>
             <div className="text-xl sm:text-2xl font-bold text-white font-cinzel">From RM 39</div>
-            <div className="text-xs text-[#C5B3A3] mt-1">Student-conscious pricing with 3 flacon sizes</div>
+            <div className="text-xs text-[#C5B3A3] mt-1">Student-conscious pricing with 3 bottle sizes</div>
           </div>
 
           <div className="glass-panel p-4 sm:p-5 rounded-2xl">

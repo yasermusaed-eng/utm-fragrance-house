@@ -91,7 +91,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <a href="#pricing" className="hover:text-[#F6E3B4] transition-colors">
-                  Flacon Pricing & Spray Counts
+                  Bottle Pricing & Spray Counts
                 </a>
               </li>
               <li>
