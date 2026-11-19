@@ -8,7 +8,11 @@ import {
   RefreshCw,
   Phone,
   MessageCircle,
-  Building2
+  Building2,
+  Tag,
+  Search,
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import {
   getStoredOrders,
@@ -16,6 +20,7 @@ import {
   updateOrderStatus,
   type OrderRecord
 } from '../utils/orderTracker';
+import { SURVEY_DISCOUNT_CODES, getUsedCodesMap } from '../data/discountCodes';
 
 interface FounderDashboardModalProps {
   isOpen: boolean;
@@ -25,12 +30,17 @@ interface FounderDashboardModalProps {
 export const FounderDashboardModal: React.FC<FounderDashboardModalProps> = ({ isOpen, onClose }) => {
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [summary, setSummary] = useState(getOperationsSummary());
+  const [activeTab, setActiveTab] = useState<'orders' | 'vouchers'>('orders');
+  const [voucherSearch, setVoucherSearch] = useState<string>('');
+  const [usedCodesMap, setUsedCodesMap] = useState<Record<string, string>>({});
+
   const [rendered, setRendered] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
 
   const refreshData = () => {
     setOrders(getStoredOrders());
     setSummary(getOperationsSummary());
+    setUsedCodesMap(getUsedCodesMap());
   };
 
   useEffect(() => {
@@ -97,7 +107,10 @@ Could you please confirm your reservation? Thank you! 🙏`;
       'College/Location',
       'Items',
       'Total Bottles',
-      'Total (RM)',
+      'Original Price (RM)',
+      'Promo Code',
+      'Discount (RM)',
+      'Final Total (RM)',
       'Pickup Hub',
       'Status',
       'Oil Used (ml)',
@@ -117,6 +130,9 @@ Could you please confirm your reservation? Thank you! 🙏`;
         `"${o.collegeHostel || ''}"`,
         `"${itemsSummary}"`,
         o.totalBottles || 1,
+        o.originalPrice ?? o.totalPrice,
+        `"${o.discountCode || 'None'}"`,
+        o.discountAmount || 0,
         o.totalPrice,
         `"${o.pickupStation}"`,
         o.status,
@@ -136,12 +152,46 @@ Could you please confirm your reservation? Thank you! 🙏`;
     document.body.removeChild(link);
   };
 
+  // Export 129 VIP Vouchers CSV for Mail Merge
+  const handleExportVouchersCSV = () => {
+    const vouchersList = Object.values(SURVEY_DISCOUNT_CODES);
+    const headers = ['Email', 'Discount_Code', 'Discount_Percent', 'Survey_Language', 'Status', 'Redeemed_Details'];
+    const rows = vouchersList.map(v => {
+      const redeemed = usedCodesMap[v.code];
+      return [
+        v.email,
+        v.code,
+        '20%',
+        v.surveyLanguage,
+        redeemed ? 'Redeemed' : 'Unused',
+        `"${redeemed || ''}"`
+      ];
+    });
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `UTM_Survey_20Percent_Vouchers_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleClearOrders = () => {
     if (confirm('Are you sure you want to reset all tracked test orders?')) {
       localStorage.removeItem('utm_fragrance_orders');
       refreshData();
     }
   };
+
+  // Vouchers list computation
+  const allVouchers = Object.values(SURVEY_DISCOUNT_CODES);
+  const redeemedVouchersCount = allVouchers.filter(v => !!usedCodesMap[v.code]).length;
+  const filteredVouchers = allVouchers.filter(v =>
+    v.email.toLowerCase().includes(voucherSearch.toLowerCase()) ||
+    v.code.toLowerCase().includes(voucherSearch.toLowerCase())
+  );
 
   return (
     <div
@@ -167,7 +217,7 @@ Could you please confirm your reservation? Thank you! 🙏`;
                 Operations &amp; Anti-Ghosting Command Dashboard
               </h3>
               <p className="text-xs text-[#D8C7B8]">
-                Founder Master View • Live Customer Contacts, 1-Click WhatsApp Follow-up &amp; Inventory
+                Founder Master View • Live Customer Contacts, 1-Click WhatsApp &amp; 129 VIP Vouchers
               </p>
             </div>
           </div>
@@ -177,6 +227,40 @@ Could you please confirm your reservation? Thank you! 🙏`;
             className="p-2 text-[#A59283] hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="px-6 pt-4 border-b border-white/10 bg-[#17040a] flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setActiveTab('orders')}
+            className={`pb-3 text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+              activeTab === 'orders'
+                ? 'border-[#D4AF37] text-[#F6E3B4]'
+                : 'border-transparent text-[#A59283] hover:text-white'
+            }`}
+          >
+            <PackageCheck className="w-4 h-4" />
+            <span>Orders &amp; Follow-Up ({orders.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('vouchers')}
+            className={`pb-3 text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+              activeTab === 'vouchers'
+                ? 'border-[#D4AF37] text-[#F6E3B4]'
+                : 'border-transparent text-[#A59283] hover:text-white'
+            }`}
+          >
+            <Tag className="w-4 h-4" />
+            <span>VIP Survey Vouchers ({allVouchers.length})</span>
+            {redeemedVouchersCount > 0 && (
+              <span className="bg-emerald-950 text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                {redeemedVouchersCount} redeemed
+              </span>
+            )}
           </button>
         </div>
 
@@ -236,196 +320,310 @@ Could you please confirm your reservation? Thank you! 🙏`;
 
           </div>
 
-          {/* Equity & Profit Distribution Breakdown */}
-          <div className="bg-[#1c060d] border border-white/10 rounded-2xl p-5">
-            <h4 className="font-cinzel text-sm font-bold text-white mb-3 flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-[#D4AF37]" />
-              <span>Projected Milestone Profit Distribution (Playbook Model)</span>
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div className="p-3 bg-[#130306] rounded-xl border border-white/5">
-                <span className="text-[#A59283] block">Seed Partner (Dad · 50%)</span>
-                <span className="font-cinzel text-base font-bold text-[#F6E3B4]">
-                  RM {Math.round(summary.estimatedNetProfit * 0.5)}
-                </span>
+          {/* ================= TAB 1: ORDERS TABLE ================= */}
+          {activeTab === 'orders' && (
+            <>
+              {/* Equity & Profit Distribution Breakdown */}
+              <div className="bg-[#1c060d] border border-white/10 rounded-2xl p-5">
+                <h4 className="font-cinzel text-sm font-bold text-white mb-3 flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-[#D4AF37]" />
+                  <span>Projected Milestone Profit Distribution (Playbook Model)</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="p-3 bg-[#130306] rounded-xl border border-white/5">
+                    <span className="text-[#A59283] block">Seed Partner (Dad · 50%)</span>
+                    <span className="font-cinzel text-base font-bold text-[#F6E3B4]">
+                      RM {Math.round(summary.estimatedNetProfit * 0.5)}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-[#130306] rounded-xl border border-white/5">
+                    <span className="text-[#A59283] block">Operations &amp; Tech (You · 27%)</span>
+                    <span className="font-cinzel text-base font-bold text-emerald-400">
+                      RM {Math.round(summary.estimatedNetProfit * 0.27)}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-[#130306] rounded-xl border border-white/5">
+                    <span className="text-[#A59283] block">Marketing &amp; Outreach (23%)</span>
+                    <span className="font-cinzel text-base font-bold text-[#F6E3B4]">
+                      RM {Math.round(summary.estimatedNetProfit * 0.23)}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="p-3 bg-[#130306] rounded-xl border border-white/5">
-                <span className="text-[#A59283] block">Operations &amp; Tech (You · 27%)</span>
-                <span className="font-cinzel text-base font-bold text-emerald-400">
-                  RM {Math.round(summary.estimatedNetProfit * 0.27)}
-                </span>
-              </div>
-              <div className="p-3 bg-[#130306] rounded-xl border border-white/5">
-                <span className="text-[#A59283] block">Marketing &amp; Outreach (23%)</span>
-                <span className="font-cinzel text-base font-bold text-[#F6E3B4]">
-                  RM {Math.round(summary.estimatedNetProfit * 0.23)}
-                </span>
-              </div>
-            </div>
-          </div>
 
-          {/* Customer Orders Table with Anti-Ghosting Follow-Up */}
-          <div>
-            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-              <h4 className="font-cinzel text-sm font-bold text-white flex items-center gap-2">
-                <PackageCheck className="w-4 h-4 text-[#D4AF37]" />
-                <span>Recorded Customer Orders ({orders.length})</span>
-              </h4>
+              {/* Customer Orders Table with Anti-Ghosting Follow-Up */}
+              <div>
+                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                  <h4 className="font-cinzel text-sm font-bold text-white flex items-center gap-2">
+                    <PackageCheck className="w-4 h-4 text-[#D4AF37]" />
+                    <span>Recorded Customer Orders ({orders.length})</span>
+                  </h4>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleExportCSV}
-                  className="px-3 py-1.5 rounded-lg bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#F6E3B4] text-xs font-semibold hover:bg-[#D4AF37] hover:text-[#140306] transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Export to Excel/CSV</span>
-                </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleExportCSV}
+                      className="px-3 py-1.5 rounded-lg bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#F6E3B4] text-xs font-semibold hover:bg-[#D4AF37] hover:text-[#140306] transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Export Orders to Excel/CSV</span>
+                    </button>
 
-                {orders.length > 0 && (
-                  <button
-                    onClick={handleClearOrders}
-                    className="p-1.5 text-xs text-rose-400 hover:text-rose-300 rounded hover:bg-rose-950/30 cursor-pointer"
-                    title="Reset test orders"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                  </button>
+                    {orders.length > 0 && (
+                      <button
+                        onClick={handleClearOrders}
+                        className="p-1.5 text-xs text-rose-400 hover:text-rose-300 rounded hover:bg-rose-950/30 cursor-pointer"
+                        title="Reset test orders"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {orders.length === 0 ? (
+                  <div className="bg-[#1b050b] border border-white/5 rounded-2xl p-8 text-center text-xs text-[#A59283]">
+                    No orders recorded yet. When customers submit through the website, their full contact details and order lines will be recorded here immediately.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-2xl border border-white/10">
+                    <table className="w-full text-left text-xs text-[#D8C7B8]">
+                      <thead className="bg-[#24070f] text-[#F6E3B4] uppercase text-[10px] tracking-wider border-b border-white/10">
+                        <tr>
+                          <th className="py-2.5 px-3">Order ID</th>
+                          <th className="py-2.5 px-3">Customer Contact</th>
+                          <th className="py-2.5 px-3">Campus Location</th>
+                          <th className="py-2.5 px-3">Items Ordered</th>
+                          <th className="py-2.5 px-3">Total</th>
+                          <th className="py-2.5 px-3">Status</th>
+                          <th className="py-2.5 px-3 text-center">1-Click Follow-Up</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 bg-[#140306]">
+                        {orders.map(order => (
+                          <tr
+                            key={order.id}
+                            className={`hover:bg-white/[0.02] align-top transition-colors ${
+                              order.status === 'Ghosted' ? 'opacity-40' : ''
+                            }`}
+                          >
+                            {/* Order ID */}
+                            <td className="py-3 px-3 font-mono text-[#D4AF37] whitespace-nowrap">
+                              {order.id}
+                              <div className="text-[10px] text-[#78695d]">
+                                {new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </td>
+
+                            {/* Customer & Phone */}
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <div className="text-white font-medium">{order.studentName}</div>
+                              {order.studentPhone ? (
+                                <a
+                                  href={`tel:${order.studentPhone}`}
+                                  className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 mt-0.5"
+                                >
+                                  <Phone className="w-3 h-3" />
+                                  <span>{order.studentPhone}</span>
+                                </a>
+                              ) : (
+                                <span className="text-[10px] text-[#78695d]">No phone recorded</span>
+                              )}
+                            </td>
+
+                            {/* Campus Location */}
+                            <td className="py-3 px-3 text-[11px]">
+                              <div className="flex items-center gap-1 text-[#D8C7B8]">
+                                <Building2 className="w-3 h-3 text-[#D4AF37] flex-shrink-0" />
+                                <span>{order.collegeHostel || 'UTM Campus'}</span>
+                              </div>
+                              <div className="text-[10px] text-[#A59283] mt-0.5">{order.pickupStation.replace(' Hub', '')}</div>
+                            </td>
+
+                            {/* Items Ordered */}
+                            <td className="py-3 px-3">
+                              {order.items && order.items.length > 0 ? (
+                                <ul className="space-y-0.5">
+                                  {order.items.map((item, i) => (
+                                    <li key={i} className="text-[11px] text-[#C5B3A3]">
+                                      <span className="text-white font-semibold">{item.fullName || item.fragranceName}</span>
+                                      {' '}<span className="text-[#D4AF37]">{item.size}</span>
+                                      {' '}×{item.quantity}
+                                      {' '}<span className="text-[#A59283]">(RM {item.price * item.quantity})</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <span className="text-[#A59283] text-xs">Standard order</span>
+                              )}
+                            </td>
+
+                            {/* Total Price with Promo breakdown */}
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <div className="font-semibold text-white">RM {order.totalPrice}</div>
+                              {order.discountCode && (
+                                <div className="text-[10px] text-emerald-400">
+                                  -RM {order.discountAmount} ({order.discountCode})
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Order Status Selector */}
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <select
+                                value={order.status}
+                                onChange={e => handleStatusChange(order.id, e.target.value as OrderRecord['status'])}
+                                className={`text-[10px] font-bold uppercase rounded-lg px-2 py-1 border cursor-pointer focus:outline-none ${
+                                  order.status === 'Collected'
+                                    ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
+                                    : order.status === 'Compounded'
+                                    ? 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40'
+                                    : order.status === 'Ghosted'
+                                    ? 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+                                    : 'bg-amber-950/80 text-amber-300 border-amber-500/40'
+                                }`}
+                              >
+                                <option value="Pending" className="bg-[#140306] text-amber-300">Pending</option>
+                                <option value="Compounded" className="bg-[#140306] text-cyan-300">Compounded</option>
+                                <option value="Collected" className="bg-[#140306] text-emerald-300">Collected</option>
+                                <option value="Ghosted" className="bg-[#140306] text-rose-300">Ghosted (Ignored)</option>
+                              </select>
+                            </td>
+
+                            {/* 1-Click WhatsApp Follow-up button */}
+                            <td className="py-3 px-3 text-center whitespace-nowrap">
+                              {order.studentPhone ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleFollowUpCustomer(order)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500 hover:text-[#140306] text-[11px] font-semibold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
+                                  title="Send follow-up WhatsApp to confirm their order"
+                                >
+                                  <MessageCircle className="w-3.5 h-3.5" />
+                                  <span>Ping on WhatsApp</span>
+                                </button>
+                              ) : (
+                                <span className="text-[10px] text-[#78695d]">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
-            </div>
+            </>
+          )}
 
-            {orders.length === 0 ? (
-              <div className="bg-[#1b050b] border border-white/5 rounded-2xl p-8 text-center text-xs text-[#A59283]">
-                No orders recorded yet. When customers submit through the website, their full contact details and order lines will be recorded here immediately.
+          {/* ================= TAB 2: VIP SURVEY VOUCHERS REGISTRY ================= */}
+          {activeTab === 'vouchers' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <h4 className="font-cinzel text-sm font-bold text-white flex items-center gap-2">
+                    <Tag className="w-4 h-4 text-[#D4AF37]" />
+                    <span>Survey VIP 20% Voucher Registry ({allVouchers.length} Total)</span>
+                  </h4>
+                  <p className="text-xs text-[#A59283] mt-0.5">
+                    129 unique students from the campus surveys. Each code is one-time use only.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleExportVouchersCSV}
+                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#F6E3B4] to-[#D4AF37] text-[#140306] text-xs font-bold hover:brightness-110 transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Vouchers CSV (For Mail Merge)</span>
+                </button>
               </div>
-            ) : (
-              <div className="overflow-x-auto rounded-2xl border border-white/10">
+
+              {/* Search Bar & Summary Stats */}
+              <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-[#19040b] p-3 rounded-2xl border border-white/5">
+                <div className="relative w-full sm:w-80">
+                  <Search className="w-3.5 h-3.5 text-[#D4AF37] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={voucherSearch}
+                    onChange={e => setVoucherSearch(e.target.value)}
+                    placeholder="Search by student email or voucher code..."
+                    className="w-full bg-[#120306] border border-white/10 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-[#78695d] focus:outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-[#A59283]">Redeemed:</span>
+                    <strong className="text-emerald-400 font-bold">{redeemedVouchersCount}</strong>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-[#A59283]">Unused:</span>
+                    <strong className="text-white font-bold">{allVouchers.length - redeemedVouchersCount}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vouchers Table */}
+              <div className="overflow-x-auto rounded-2xl border border-white/10 max-h-[460px] overflow-y-auto">
                 <table className="w-full text-left text-xs text-[#D8C7B8]">
-                  <thead className="bg-[#24070f] text-[#F6E3B4] uppercase text-[10px] tracking-wider border-b border-white/10">
+                  <thead className="bg-[#24070f] text-[#F6E3B4] uppercase text-[10px] tracking-wider border-b border-white/10 sticky top-0 z-10">
                     <tr>
-                      <th className="py-2.5 px-3">Order ID</th>
-                      <th className="py-2.5 px-3">Customer Contact</th>
-                      <th className="py-2.5 px-3">Campus Location</th>
-                      <th className="py-2.5 px-3">Items Ordered</th>
-                      <th className="py-2.5 px-3">Total</th>
+                      <th className="py-2.5 px-3">Voucher Code</th>
+                      <th className="py-2.5 px-3">Student Email</th>
+                      <th className="py-2.5 px-3">Language</th>
+                      <th className="py-2.5 px-3">Discount</th>
                       <th className="py-2.5 px-3">Status</th>
-                      <th className="py-2.5 px-3 text-center">1-Click Follow-Up</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 bg-[#140306]">
-                    {orders.map(order => (
-                      <tr
-                        key={order.id}
-                        className={`hover:bg-white/[0.02] align-top transition-colors ${
-                          order.status === 'Ghosted' ? 'opacity-40' : ''
-                        }`}
-                      >
-                        {/* Order ID */}
-                        <td className="py-3 px-3 font-mono text-[#D4AF37] whitespace-nowrap">
-                          {order.id}
-                          <div className="text-[10px] text-[#78695d]">
-                            {new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                        </td>
-
-                        {/* Customer & Phone */}
-                        <td className="py-3 px-3 whitespace-nowrap">
-                          <div className="text-white font-medium">{order.studentName}</div>
-                          {order.studentPhone ? (
-                            <a
-                              href={`tel:${order.studentPhone}`}
-                              className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 mt-0.5"
-                            >
-                              <Phone className="w-3 h-3" />
-                              <span>{order.studentPhone}</span>
-                            </a>
-                          ) : (
-                            <span className="text-[10px] text-[#78695d]">No phone recorded</span>
-                          )}
-                        </td>
-
-                        {/* Campus Location */}
-                        <td className="py-3 px-3 text-[11px]">
-                          <div className="flex items-center gap-1 text-[#D8C7B8]">
-                            <Building2 className="w-3 h-3 text-[#D4AF37] flex-shrink-0" />
-                            <span>{order.collegeHostel || 'UTM Campus'}</span>
-                          </div>
-                          <div className="text-[10px] text-[#A59283] mt-0.5">{order.pickupStation.replace(' Hub', '')}</div>
-                        </td>
-
-                        {/* Items Ordered */}
-                        <td className="py-3 px-3">
-                          {order.items && order.items.length > 0 ? (
-                            <ul className="space-y-0.5">
-                              {order.items.map((item, i) => (
-                                <li key={i} className="text-[11px] text-[#C5B3A3]">
-                                  <span className="text-white font-semibold">{item.fullName || item.fragranceName}</span>
-                                  {' '}<span className="text-[#D4AF37]">{item.size}</span>
-                                  {' '}×{item.quantity}
-                                  {' '}<span className="text-[#A59283]">(RM {item.price * item.quantity})</span>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <span className="text-[#A59283] text-xs">Standard order</span>
-                          )}
-                        </td>
-
-                        {/* Total Price */}
-                        <td className="py-3 px-3 font-semibold text-white whitespace-nowrap">
-                          RM {order.totalPrice}
-                        </td>
-
-                        {/* Order Status Selector */}
-                        <td className="py-3 px-3 whitespace-nowrap">
-                          <select
-                            value={order.status}
-                            onChange={e => handleStatusChange(order.id, e.target.value as OrderRecord['status'])}
-                            className={`text-[10px] font-bold uppercase rounded-lg px-2 py-1 border cursor-pointer focus:outline-none ${
-                              order.status === 'Collected'
-                                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
-                                : order.status === 'Compounded'
-                                ? 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40'
-                                : order.status === 'Ghosted'
-                                ? 'bg-rose-950/80 text-rose-300 border-rose-500/40'
-                                : 'bg-amber-950/80 text-amber-300 border-amber-500/40'
-                            }`}
-                          >
-                            <option value="Pending" className="bg-[#140306] text-amber-300">Pending</option>
-                            <option value="Compounded" className="bg-[#140306] text-cyan-300">Compounded</option>
-                            <option value="Collected" className="bg-[#140306] text-emerald-300">Collected</option>
-                            <option value="Ghosted" className="bg-[#140306] text-rose-300">Ghosted (Ignored)</option>
-                          </select>
-                        </td>
-
-                        {/* 1-Click WhatsApp Follow-up button */}
-                        <td className="py-3 px-3 text-center whitespace-nowrap">
-                          {order.studentPhone ? (
-                            <button
-                              type="button"
-                              onClick={() => handleFollowUpCustomer(order)}
-                              className="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500 hover:text-[#140306] text-[11px] font-semibold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
-                              title="Send follow-up WhatsApp to confirm their order"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5" />
-                              <span>Ping on WhatsApp</span>
-                            </button>
-                          ) : (
-                            <span className="text-[10px] text-[#78695d]">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredVouchers.map(v => {
+                      const isRedeemed = !!usedCodesMap[v.code];
+                      return (
+                        <tr key={v.code} className="hover:bg-white/[0.02]">
+                          <td className="py-2.5 px-3 font-mono text-[#D4AF37] font-semibold">
+                            {v.code}
+                          </td>
+                          <td className="py-2.5 px-3 text-white">
+                            {v.email}
+                          </td>
+                          <td className="py-2.5 px-3 text-[#A59283]">
+                            {v.surveyLanguage}
+                          </td>
+                          <td className="py-2.5 px-3 font-semibold text-emerald-400">
+                            20% OFF
+                          </td>
+                          <td className="py-2.5 px-3">
+                            {isRedeemed ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-500/30">
+                                Redeemed: {usedCodesMap[v.code]}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
+                                Unused (Active)
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
         </div>
 
         {/* Footer */}
         <div className="p-4 bg-[#1b050b] border-t border-[#D4AF37]/25 flex items-center justify-between text-xs text-[#A59283]">
-          <span>Tip: If a customer ignores you on WhatsApp, change their status to "Ghosted" to immediately free their bottle slot.</span>
+          <span>
+            {activeTab === 'orders'
+              ? 'Tip: If a customer ignores you on WhatsApp, switch their status to "Ghosted" to immediately free their bottle slot.'
+              : 'All 129 survey codes are registered. The website rejects invalid codes and prevents reusing codes.'}
+          </span>
           <button
             onClick={onClose}
             className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold cursor-pointer"

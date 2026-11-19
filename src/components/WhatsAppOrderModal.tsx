@@ -15,10 +15,12 @@ import {
   Clock,
   AlertTriangle,
   Building2,
-  ExternalLink
+  ExternalLink,
+  Tag
 } from 'lucide-react';
 import { FRAGRANCES, SIZE_OPTIONS, PICKUP_STATIONS } from '../data/fragrances';
 import { saveMultiItemOrder, type OrderItem, type OrderRecord } from '../utils/orderTracker';
+import { validatePromoCode, markCodeAsUsed, type DiscountCode } from '../data/discountCodes';
 import confetti from 'canvas-confetti';
 
 interface WhatsAppOrderModalProps {
@@ -71,6 +73,12 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
   const [notes, setNotes] = useState<string>('');
   const [formError, setFormError] = useState<string>('');
 
+  // ----- Promo Code state -----
+  const [promoInput, setPromoInput] = useState<string>('');
+  const [appliedPromo, setAppliedPromo] = useState<DiscountCode | null>(null);
+  const [promoError, setPromoError] = useState<string>('');
+  const [promoSuccess, setPromoSuccess] = useState<string>('');
+
   // Post-submit confirmation screen
   const [submittedOrder, setSubmittedOrder] = useState<OrderRecord | null>(null);
 
@@ -104,6 +112,10 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
       setCollegeHostel(UTM_COLLEGES[0]);
       setNotes('');
       setFormError('');
+      setPromoInput('');
+      setAppliedPromo(null);
+      setPromoError('');
+      setPromoSuccess('');
       setSubmittedOrder(null);
       setPickupStationId(PICKUP_STATIONS[0].id);
     }
@@ -159,8 +171,33 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
   // ----- Computed totals -----
   const cartRows = Object.values(cart);
   const cartCount = cartRows.reduce((s, r) => s + r.quantity, 0);
-  const totalPrice = cartRows.reduce((s, r) => s + priceFor(r.size) * r.quantity, 0);
+  const subtotal = cartRows.reduce((s, r) => s + priceFor(r.size) * r.quantity, 0);
+  
+  // 20% discount calculation
+  const discountAmount = appliedPromo ? Math.round(subtotal * (appliedPromo.discountPercent / 100)) : 0;
+  const finalTotal = Math.max(0, subtotal - discountAmount);
+  
   const currentStation = PICKUP_STATIONS.find(p => p.id === pickupStationId) || PICKUP_STATIONS[0];
+
+  // ----- Promo code handler -----
+  const handleApplyPromo = () => {
+    setPromoError('');
+    setPromoSuccess('');
+    
+    if (!promoInput.trim()) {
+      setPromoError('Please enter a voucher code.');
+      return;
+    }
+
+    const result = validatePromoCode(promoInput);
+    if (!result.isValid || !result.discount) {
+      setPromoError(result.message);
+      return;
+    }
+
+    setAppliedPromo(result.discount);
+    setPromoSuccess(`VIP Voucher Valid! 20% Survey Discount Applied (-RM ${Math.round(subtotal * 0.2)})`);
+  };
 
   // ----- WhatsApp message generator -----
   const generateWhatsAppMessage = (orderId?: string) => {
@@ -182,6 +219,12 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
 
     const noteLine = notes.trim() ? `\nSpecial Request: ${notes.trim()}` : '';
 
+    const priceBreakdown = appliedPromo
+      ? `Original Price: RM ${subtotal}\n` +
+        `VIP Voucher Code: ${appliedPromo.code} (20% Survey Discount Applied: -RM ${discountAmount})\n` +
+        `*Final Total: RM ${finalTotal}* (Cash on Delivery / DuitNow QR)`
+      : `*Total: RM ${finalTotal}* (Cash on Delivery / DuitNow QR)`;
+
     return (
       `${greeting}\n` +
       `I would like to place an order for Drop 01:\n\n` +
@@ -189,7 +232,7 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
       `Contact: ${studentPhone.trim()}\n` +
       `College/Location: ${collegeHostel}\n\n` +
       `${itemLines}\n\n` +
-      `Total: RM ${totalPrice} (Cash on Delivery / DuitNow QR)\n` +
+      `${priceBreakdown}\n` +
       `Preferred Pickup: ${currentStation.name} (${currentStation.detail.replace('•', '-')})` +
       `${noteLine}\n\n` +
       `*I confirm that I will pick up and complete payment at the station.* Please assign my numbered bottle serial stamp. Thank you!`
@@ -232,10 +275,18 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
       studentPhone: studentPhone.trim(),
       collegeHostel,
       items,
-      totalPrice,
+      originalPrice: subtotal,
+      discountCode: appliedPromo?.code,
+      discountAmount: discountAmount,
+      totalPrice: finalTotal,
       pickupStation: currentStation.name,
       notes: notes.trim(),
     });
+
+    // Mark code as used in localStorage
+    if (appliedPromo) {
+      markCodeAsUsed(appliedPromo.code, saved.id);
+    }
 
     setSubmittedOrder(saved);
 
@@ -342,7 +393,17 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
               <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row justify-between text-xs text-[#C5B3A3] gap-2">
                 <span>Contact: <strong className="text-white">{submittedOrder.studentPhone}</strong></span>
                 <span>Station: <strong className="text-white">{submittedOrder.pickupStation}</strong></span>
-                <span>Total: <strong className="text-[#F6E3B4]">RM {submittedOrder.totalPrice}</strong></span>
+                <span>
+                  Total:{' '}
+                  {submittedOrder.discountAmount && submittedOrder.discountAmount > 0 ? (
+                    <>
+                      <span className="line-through text-[#78695d] mr-1">RM {submittedOrder.originalPrice}</span>
+                      <strong className="text-emerald-400">RM {submittedOrder.totalPrice} (20% OFF)</strong>
+                    </>
+                  ) : (
+                    <strong className="text-[#F6E3B4]">RM {submittedOrder.totalPrice}</strong>
+                  )}
+                </span>
               </div>
             </div>
 
@@ -615,6 +676,70 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
               </div>
             </div>
 
+            {/* ── STEP 5: VIP Survey Discount Voucher ── */}
+            <div className="bg-[#1c060e] border border-[#D4AF37]/30 rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#F6E3B4] flex items-center gap-2">
+                  <Tag className="w-3.5 h-3.5 text-[#D4AF37]" />
+                  <span>VIP Survey 20% Discount Voucher</span>
+                </label>
+                {appliedPromo && (
+                  <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold">
+                    -20% Applied
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={promoInput}
+                  onChange={e => {
+                    setPromoInput(e.target.value);
+                    setPromoError('');
+                  }}
+                  disabled={!!appliedPromo}
+                  placeholder="Enter your VIP code (e.g. VIP20-C5DE)"
+                  className="flex-1 bg-[#120306] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white uppercase placeholder-[#78695d] focus:outline-none focus:border-[#D4AF37]"
+                />
+                {appliedPromo ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAppliedPromo(null);
+                      setPromoInput('');
+                      setPromoSuccess('');
+                    }}
+                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs text-white font-semibold transition-all cursor-pointer"
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleApplyPromo}
+                    className="px-5 py-2 rounded-xl font-bold text-xs uppercase tracking-wider text-[#140306] bg-gradient-to-r from-[#F6E3B4] to-[#D4AF37] hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-md"
+                  >
+                    Apply Code
+                  </button>
+                )}
+              </div>
+
+              {promoError && (
+                <div className="mt-2 text-[11px] text-rose-400 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{promoError}</span>
+                </div>
+              )}
+
+              {promoSuccess && (
+                <div className="mt-2 text-[11px] text-emerald-400 flex items-center gap-1.5">
+                  <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{promoSuccess}</span>
+                </div>
+              )}
+            </div>
+
             {/* Error Message */}
             {formError && (
               <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-xs text-rose-300">
@@ -635,13 +760,27 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
                     </div>
                   );
                 })}
+
+                {appliedPromo && (
+                  <div className="flex justify-between text-xs text-emerald-400 font-semibold pt-1 border-t border-white/5">
+                    <span>VIP Survey Voucher ({appliedPromo.code} · -20%)</span>
+                    <span>-RM {discountAmount}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-xs text-[#C5B3A3]">
                   <span>Campus Pickup ({currentStation.name.split(' ')[0]})</span>
                   <span className="text-emerald-400 font-semibold">FREE (RM 0.00)</span>
                 </div>
+                
                 <div className="pt-2 border-t border-white/10 flex justify-between items-baseline">
                   <span className="font-cinzel font-bold text-white text-sm">Total Due on Pickup</span>
-                  <span className="font-cinzel font-extrabold text-2xl text-[#F6E3B4]">RM {totalPrice}</span>
+                  <div className="text-right">
+                    {appliedPromo && (
+                      <span className="text-xs text-[#78695d] line-through mr-2">RM {subtotal}</span>
+                    )}
+                    <span className="font-cinzel font-extrabold text-2xl text-[#F6E3B4]">RM {finalTotal}</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -670,7 +809,7 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
               <MessageCircle className="w-4 h-4" />
               <span>
                 {cartRows.length > 0
-                  ? `Confirm & Open WhatsApp (RM ${totalPrice})`
+                  ? `Confirm & Open WhatsApp (RM ${finalTotal})`
                   : 'Add fragrances to continue'}
               </span>
               {cartRows.length > 0 && <ChevronRight className="w-4 h-4" />}

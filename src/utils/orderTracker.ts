@@ -16,6 +16,9 @@ export interface OrderRecord {
   collegeHostel: string;
   items: OrderItem[];
   totalBottles: number;
+  originalPrice: number;
+  discountCode?: string;
+  discountAmount?: number;
   totalPrice: number;
   pickupStation: string;
   notes: string;
@@ -42,6 +45,9 @@ export function saveMultiItemOrder(order: {
   studentPhone: string;
   collegeHostel?: string;
   items: OrderItem[];
+  originalPrice?: number;
+  discountCode?: string;
+  discountAmount?: number;
   totalPrice: number;
   pickupStation: string;
   notes: string;
@@ -76,6 +82,9 @@ export function saveMultiItemOrder(order: {
     collegeHostel: order.collegeHostel || 'UTM Campus',
     items: order.items,
     totalBottles,
+    originalPrice: order.originalPrice ?? order.totalPrice,
+    discountCode: order.discountCode,
+    discountAmount: order.discountAmount || 0,
     totalPrice: order.totalPrice,
     pickupStation: order.pickupStation,
     notes: order.notes,
