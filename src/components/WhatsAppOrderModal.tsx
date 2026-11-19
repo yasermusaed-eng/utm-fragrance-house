@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   Building2,
   ExternalLink,
-  Tag
+  Tag,
+  FlaskConical
 } from 'lucide-react';
 import { FRAGRANCES, SIZE_OPTIONS, PICKUP_STATIONS } from '../data/fragrances';
 import { saveMultiItemOrder, type OrderItem, type OrderRecord } from '../utils/orderTracker';
@@ -29,10 +30,11 @@ interface WhatsAppOrderModalProps {
   preselectedFragranceId?: string;
 }
 
-// A cart row: one fragrance + one size + quantity
+// A cart row: one fragrance + size + custom concentration + quantity
 interface CartRow {
   fragranceId: string;
   size: '30ml' | '50ml' | '100ml';
+  concentration: 5 | 10 | 15 | 20 | 25 | 30;
   quantity: number;
 }
 
@@ -96,6 +98,7 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
           [preselectedFragranceId]: {
             fragranceId: preselectedFragranceId,
             size: '50ml',
+            concentration: 20,
             quantity: 1,
           },
         };
@@ -148,7 +151,7 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
       }
       return {
         ...prev,
-        [fragranceId]: { fragranceId, size: '50ml', quantity: 1 },
+        [fragranceId]: { fragranceId, size: '50ml', concentration: 20, quantity: 1 },
       };
     });
   };
@@ -157,6 +160,13 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
     setCart(prev => ({
       ...prev,
       [fragranceId]: { ...prev[fragranceId], size },
+    }));
+  };
+
+  const updateConcentration = (fragranceId: string, concentration: 5 | 10 | 15 | 20 | 25 | 30) => {
+    setCart(prev => ({
+      ...prev,
+      [fragranceId]: { ...prev[fragranceId], concentration },
     }));
   };
 
@@ -210,9 +220,14 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
         const frag = FRAGRANCES.find(f => f.id === row.fragranceId)!;
         const sizeOpt = SIZE_OPTIONS.find(s => s.size === row.size)!;
         const lineTotal = sizeOpt.price * row.quantity;
+        const conc = row.concentration || 20;
+        const concLabel = conc === 5 ? '5% EDC' : conc === 10 ? '10% EDT' : conc === 15 ? '15% EDP' : conc === 20 ? '20% Standard EDP' : conc === 25 ? '25% Extrait' : '30% Elixir';
+
         return (
           `ITEM ${idx + 1}: ${frag.fullName} (${frag.brand})\n` +
-          `- Size: ${sizeOpt.size} (${sizeOpt.label}) x ${row.quantity} bottle(s) - RM ${lineTotal}`
+          `- Size: ${sizeOpt.size} (${sizeOpt.label}) x ${row.quantity} bottle(s)\n` +
+          `- Formulation: ${concLabel} (Custom Compounded)\n` +
+          `- Price: RM ${lineTotal}`
         );
       })
       .join('\n\n');
@@ -256,7 +271,7 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
 
     setFormError('');
 
-    // Build OrderItem[] for tracker
+    // Build OrderItem[] for tracker with exact custom concentration
     const items: OrderItem[] = cartRows.map(row => {
       const frag = FRAGRANCES.find(f => f.id === row.fragranceId)!;
       return {
@@ -265,6 +280,7 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
         fullName: frag.fullName,
         brand: frag.brand,
         size: row.size,
+        concentration: row.concentration || 20,
         price: priceFor(row.size),
         quantity: row.quantity,
       };
@@ -331,10 +347,10 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
             </div>
             <div>
               <h3 className="font-cinzel text-lg sm:text-xl font-bold text-white leading-none">
-                {submittedOrder ? 'Reservation Registered' : 'Build Your Order'}
+                {submittedOrder ? 'Reservation Registered' : 'Build Your Custom Order'}
               </h3>
               <p className="text-xs text-[#D8C7B8] mt-1">
-                Drop 01 Official Release • Free Campus Pickup
+                Drop 01 Official Release • Custom Compounded Formulations
               </p>
             </div>
           </div>
@@ -491,16 +507,21 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
             {cartRows.length > 0 && (
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#F6E3B4] mb-2.5">
-                  2. Bottle Size &amp; Quantity
+                  2. Bottle Size &amp; Custom Oil Concentration
                 </label>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {cartRows.map(row => {
                     const frag = FRAGRANCES.find(f => f.id === row.fragranceId)!;
                     const lineTotal = priceFor(row.size) * row.quantity;
+                    const sizeNum = parseInt(row.size, 10);
+                    const conc = row.concentration || 20;
+                    const oilMl = Number(((sizeNum * conc) / 100).toFixed(1));
+                    const alcoholMl = Number(((sizeNum * (100 - conc)) / 100).toFixed(1));
+
                     return (
-                      <div key={row.fragranceId} className="bg-[#1b050b] border border-[#D4AF37]/20 rounded-2xl p-4">
+                      <div key={row.fragranceId} className="bg-[#1b050b] border border-[#D4AF37]/20 rounded-2xl p-4 space-y-3">
                         {/* Fragrance header with Full Name & Brand */}
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-3">
                           <img
                             src={frag.image}
                             alt={frag.fullName}
@@ -514,26 +535,67 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
                         </div>
 
                         {/* Bottle Size selector */}
-                        <div className="grid grid-cols-3 gap-2 mb-3">
-                          {SIZE_OPTIONS.map(s => (
-                            <button
-                              key={s.size}
-                              type="button"
-                              onClick={() => updateSize(row.fragranceId, s.size)}
-                              className={`py-2 px-1 rounded-xl text-center border transition-all cursor-pointer ${
-                                row.size === s.size
-                                  ? 'bg-[#310913] border-[#D4AF37] text-white shadow-sm'
-                                  : 'bg-[#130306] border-white/10 text-[#C9B7A7] hover:border-[#D4AF37]/40'
-                              }`}
-                            >
-                              <div className="font-cinzel text-xs font-bold text-white">{s.size}</div>
-                              <div className="text-[9px] font-semibold text-[#D4AF37]">RM {s.price}</div>
-                            </button>
-                          ))}
+                        <div>
+                          <div className="text-[10px] uppercase font-bold text-[#A59283] tracking-wider mb-1.5">
+                            Select Bottle Size
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            {SIZE_OPTIONS.map(s => (
+                              <button
+                                key={s.size}
+                                type="button"
+                                onClick={() => updateSize(row.fragranceId, s.size)}
+                                className={`py-2 px-1 rounded-xl text-center border transition-all cursor-pointer ${
+                                  row.size === s.size
+                                    ? 'bg-[#310913] border-[#D4AF37] text-white shadow-sm'
+                                    : 'bg-[#130306] border-white/10 text-[#C9B7A7] hover:border-[#D4AF37]/40'
+                                }`}
+                              >
+                                <div className="font-cinzel text-xs font-bold text-white">{s.size}</div>
+                                <div className="text-[9px] font-semibold text-[#D4AF37]">RM {s.price}</div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Custom Oil Concentration Selector: 5%, 10%, 15%, 20%, 25%, 30% */}
+                        <div>
+                          <div className="flex items-center justify-between text-[11px] mb-1.5">
+                            <span className="font-semibold text-[#D4AF37] flex items-center gap-1.5">
+                              <FlaskConical className="w-3.5 h-3.5 text-[#D4AF37]" />
+                              <span>Custom Oil Concentration</span>
+                            </span>
+                            <span className="text-[#F6E3B4] font-medium text-[10px]">
+                              {oilMl}ml Oil + {alcoholMl}ml Alcohol
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-6 gap-1.5">
+                            {[5, 10, 15, 20, 25, 30].map(c => {
+                              const isSelected = (row.concentration || 20) === c;
+                              return (
+                                <button
+                                  key={c}
+                                  type="button"
+                                  onClick={() => updateConcentration(row.fragranceId, c as 5 | 10 | 15 | 20 | 25 | 30)}
+                                  className={`py-1.5 px-0.5 rounded-lg text-center border text-[11px] font-bold transition-all cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-gradient-to-r from-[#F6E3B4] to-[#D4AF37] text-[#140306] border-[#F6E3B4] shadow-md shadow-[#D4AF37]/30 scale-102'
+                                      : 'bg-[#140306] text-[#C9B7A7] border-white/10 hover:border-[#D4AF37]/40'
+                                  }`}
+                                >
+                                  <div>{c}%</div>
+                                  <div className="text-[8px] font-normal opacity-85 leading-none mt-0.5">
+                                    {c === 5 ? 'EDC' : c === 10 ? 'EDT' : c === 15 ? 'EDP' : c === 20 ? 'Standard' : c === 25 ? 'Extrait' : 'Elixir'}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
 
                         {/* Quantity stepper */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between pt-1">
                           <span className="text-[11px] text-[#A59283]">Number of Bottles</span>
                           <div className="flex items-center gap-2">
                             <button
@@ -753,9 +815,13 @@ export const WhatsAppOrderModal: React.FC<WhatsAppOrderModalProps> = ({
                 {cartRows.map(row => {
                   const frag = FRAGRANCES.find(f => f.id === row.fragranceId)!;
                   const lineTotal = priceFor(row.size) * row.quantity;
+                  const conc = row.concentration || 20;
+
                   return (
                     <div key={row.fragranceId} className="flex justify-between text-xs text-[#C5B3A3]">
-                      <span>{frag.fullName} · {row.size} × {row.quantity}</span>
+                      <span>
+                        {frag.fullName} · {row.size} ({conc}% oil) × {row.quantity}
+                      </span>
                       <span>RM {lineTotal}</span>
                     </div>
                   );

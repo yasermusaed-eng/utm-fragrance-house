@@ -12,13 +12,19 @@ import {
   Tag,
   Search,
   CheckCircle,
-  Clock
+  Clock,
+  Boxes,
+  Edit3,
+  Droplets,
+  Save
 } from 'lucide-react';
 import {
   getStoredOrders,
   getOperationsSummary,
   updateOrderStatus,
-  type OrderRecord
+  saveLabStock,
+  type OrderRecord,
+  type LabInventoryStock
 } from '../utils/orderTracker';
 import { SURVEY_DISCOUNT_CODES, getUsedCodesMap } from '../data/discountCodes';
 
@@ -30,17 +36,29 @@ interface FounderDashboardModalProps {
 export const FounderDashboardModal: React.FC<FounderDashboardModalProps> = ({ isOpen, onClose }) => {
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [summary, setSummary] = useState(getOperationsSummary());
-  const [activeTab, setActiveTab] = useState<'orders' | 'vouchers'>('orders');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'orders' | 'vouchers'>('inventory');
   const [voucherSearch, setVoucherSearch] = useState<string>('');
   const [usedCodesMap, setUsedCodesMap] = useState<Record<string, string>>({});
+
+  // Stock edit state
+  const [isEditingStock, setIsEditingStock] = useState<boolean>(false);
+  const [stockForm, setStockForm] = useState<LabInventoryStock>({
+    initialBottles: 70,
+    initialAlcoholMl: 2800,
+    initialOilMl: 700,
+    initialAtomizers: 70,
+  });
 
   const [rendered, setRendered] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
 
   const refreshData = () => {
-    setOrders(getStoredOrders());
-    setSummary(getOperationsSummary());
+    const loadedOrders = getStoredOrders();
+    const loadedSummary = getOperationsSummary();
+    setOrders(loadedOrders);
+    setSummary(loadedSummary);
     setUsedCodesMap(getUsedCodesMap());
+    setStockForm(loadedSummary.labStock);
   };
 
   useEffect(() => {
@@ -63,6 +81,13 @@ export const FounderDashboardModal: React.FC<FounderDashboardModalProps> = ({ is
     refreshData();
   };
 
+  const handleSaveStock = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveLabStock(stockForm);
+    setIsEditingStock(false);
+    refreshData();
+  };
+
   // 1-Click WhatsApp Follow-up to customer
   const handleFollowUpCustomer = (order: OrderRecord) => {
     const rawPhone = order.studentPhone.replace(/\D/g, '');
@@ -74,7 +99,7 @@ export const FounderDashboardModal: React.FC<FounderDashboardModalProps> = ({ is
     }
 
     const itemsSummary = order.items
-      ? order.items.map(i => `${i.fullName || i.fragranceName} (${i.size} x${i.quantity})`).join(', ')
+      ? order.items.map(i => `${i.fullName || i.fragranceName} (${i.size} ${i.concentration || 20}% x${i.quantity})`).join(', ')
       : 'perfumes';
 
     const followUpMsg = `Salam & Hi ${order.studentName}! 👋
@@ -120,7 +145,7 @@ Could you please confirm your reservation? Thank you! 🙏`;
 
     const rows = orders.map(o => {
       const itemsSummary = o.items
-        ? o.items.map(item => `${item.fullName || item.fragranceName} ${item.size}x${item.quantity}`).join(' | ')
+        ? o.items.map(item => `${item.fullName || item.fragranceName} ${item.size} (${item.concentration || 20}% oil) x${item.quantity}`).join(' | ')
         : 'N/A';
       return [
         o.id,
@@ -214,10 +239,10 @@ Could you please confirm your reservation? Thank you! 🙏`;
             </div>
             <div>
               <h3 className="font-cinzel text-lg sm:text-xl font-bold text-white">
-                Operations &amp; Anti-Ghosting Command Dashboard
+                Laboratory Inventory &amp; Operations Command
               </h3>
               <p className="text-xs text-[#D8C7B8]">
-                Founder Master View • Live Customer Contacts, 1-Click WhatsApp &amp; 129 VIP Vouchers
+                Founder Real-Time Stock • Bottles, Oil &amp; Alcohol Consumed • 1-Click WhatsApp Follow-up
               </p>
             </div>
           </div>
@@ -234,6 +259,19 @@ Could you please confirm your reservation? Thank you! 🙏`;
         <div className="px-6 pt-4 border-b border-white/10 bg-[#17040a] flex items-center gap-4">
           <button
             type="button"
+            onClick={() => setActiveTab('inventory')}
+            className={`pb-3 text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+              activeTab === 'inventory'
+                ? 'border-[#D4AF37] text-[#F6E3B4]'
+                : 'border-transparent text-[#A59283] hover:text-white'
+            }`}
+          >
+            <Boxes className="w-4 h-4" />
+            <span>Raw Materials &amp; Stock</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('orders')}
             className={`pb-3 text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
               activeTab === 'orders'
@@ -242,7 +280,7 @@ Could you please confirm your reservation? Thank you! 🙏`;
             }`}
           >
             <PackageCheck className="w-4 h-4" />
-            <span>Orders &amp; Follow-Up ({orders.length})</span>
+            <span>Customer Orders ({orders.length})</span>
           </button>
 
           <button
@@ -267,18 +305,18 @@ Could you please confirm your reservation? Thank you! 🙏`;
         {/* Body */}
         <div className="p-6 overflow-y-auto space-y-6 text-left">
           
-          {/* Top KPI Cards */}
+          {/* Top KPI Cards - Real-time metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             
             <div className="bg-[#1b050b] border border-[#D4AF37]/25 p-4 rounded-2xl">
               <div className="text-[10px] text-[#A59283] uppercase font-bold tracking-wider mb-1">
-                Drop 01 Allocation
+                Customers &amp; Bottles Sold
               </div>
               <div className="font-cinzel text-2xl font-bold text-white">
-                {summary.totalBottlesSold} / {summary.batchCapacity}
+                {summary.totalBottlesSold} <span className="text-sm font-normal text-[#A59283]">bottles</span>
               </div>
               <div className="text-[11px] text-[#F6E3B4] mt-1">
-                {summary.remainingDrop01Bottles} bottles remaining
+                Across {summary.activeOrdersCount} customer order(s)
               </div>
             </div>
 
@@ -290,7 +328,7 @@ Could you please confirm your reservation? Thank you! 🙏`;
                 RM {summary.totalGrossRevenue}
               </div>
               <div className="text-[11px] text-[#A59283] mt-1">
-                {summary.activeOrdersCount} active ({summary.totalOrders - summary.activeOrdersCount} ghosted)
+                Avg RM {summary.activeOrdersCount > 0 ? Math.round(summary.totalGrossRevenue / summary.activeOrdersCount) : 0} per student
               </div>
             </div>
 
@@ -308,21 +346,230 @@ Could you please confirm your reservation? Thank you! 🙏`;
 
             <div className="bg-[#1b050b] border border-[#D4AF37]/25 p-4 rounded-2xl">
               <div className="text-[10px] text-[#A59283] uppercase font-bold tracking-wider mb-1">
-                Oil Used (20% EDP)
+                Materials Consumed
               </div>
               <div className="font-cinzel text-2xl font-bold text-cyan-400">
                 {summary.totalOilUsedMl} ml
               </div>
               <div className="text-[11px] text-[#A59283] mt-1">
-                + {summary.totalAlcoholUsedMl} ml alcohol
+                Oil + {summary.totalAlcoholUsedMl} ml Alcohol
               </div>
             </div>
 
           </div>
 
-          {/* ================= TAB 1: ORDERS TABLE ================= */}
-          {activeTab === 'orders' && (
-            <>
+          {/* ================= TAB 1: RAW MATERIALS & LABORATORY INVENTORY ================= */}
+          {activeTab === 'inventory' && (
+            <div className="space-y-6">
+              
+              {/* Material Inventory Stock Head */}
+              <div className="bg-[#1b050b] border border-[#D4AF37]/30 rounded-3xl p-6">
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <div>
+                    <h4 className="font-cinzel text-base font-bold text-white flex items-center gap-2">
+                      <Boxes className="w-5 h-5 text-[#D4AF37]" />
+                      <span>Physical Laboratory Raw Material Stock</span>
+                    </h4>
+                    <p className="text-xs text-[#A59283] mt-0.5">
+                      Tracks what you have in the lab vs what orders have consumed in real-time.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingStock(!isEditingStock)}
+                    className="px-3.5 py-1.5 rounded-xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#F6E3B4] text-xs font-semibold hover:bg-[#D4AF37] hover:text-[#140306] transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>{isEditingStock ? 'Close Editor' : 'Edit Initial Stock'}</span>
+                  </button>
+                </div>
+
+                {/* Edit Form Drawer */}
+                {isEditingStock && (
+                  <form onSubmit={handleSaveStock} className="mb-6 p-4 bg-[#140306] rounded-2xl border border-[#D4AF37]/40 space-y-3">
+                    <div className="text-xs font-bold text-[#F6E3B4] uppercase tracking-wider mb-2">
+                      Set Your Current Laboratory Starting Stock
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-[#A59283] uppercase mb-1">Total Bottles</label>
+                        <input
+                          type="number"
+                          value={stockForm.initialBottles}
+                          onChange={e => setStockForm({ ...stockForm, initialBottles: Number(e.target.value) })}
+                          className="w-full bg-[#1b050b] border border-white/10 rounded-lg p-2 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-[#A59283] uppercase mb-1">Perfumer Alcohol (ml)</label>
+                        <input
+                          type="number"
+                          value={stockForm.initialAlcoholMl}
+                          onChange={e => setStockForm({ ...stockForm, initialAlcoholMl: Number(e.target.value) })}
+                          className="w-full bg-[#1b050b] border border-white/10 rounded-lg p-2 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-[#A59283] uppercase mb-1">Total Oil Stock (ml)</label>
+                        <input
+                          type="number"
+                          value={stockForm.initialOilMl}
+                          onChange={e => setStockForm({ ...stockForm, initialOilMl: Number(e.target.value) })}
+                          className="w-full bg-[#1b050b] border border-white/10 rounded-lg p-2 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-[#A59283] uppercase mb-1">Gold Atomizers</label>
+                        <input
+                          type="number"
+                          value={stockForm.initialAtomizers}
+                          onChange={e => setStockForm({ ...stockForm, initialAtomizers: Number(e.target.value) })}
+                          className="w-full bg-[#1b050b] border border-white/10 rounded-lg p-2 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="submit"
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#F6E3B4] to-[#D4AF37] text-[#140306] font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Save Starting Stock</span>
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* Live Gauges Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  
+                  {/* Flacon Bottles */}
+                  <div className="p-4 bg-[#140306] rounded-2xl border border-white/5 space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-[#A59283] tracking-wider block">
+                      Empty Glass Bottles
+                    </span>
+                    <div className="flex items-baseline justify-between">
+                      <span className="font-cinzel text-3xl font-extrabold text-white">
+                        {summary.remainingBottles}
+                      </span>
+                      <span className="text-xs text-[#A59283]">
+                        of {summary.labStock.initialBottles} available
+                      </span>
+                    </div>
+                    <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-[#D4AF37] h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (summary.remainingBottles / (summary.labStock.initialBottles || 1)) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="text-[11px] text-emerald-400">
+                      {summary.totalBottlesSold} bottles compounded/sold
+                    </div>
+                  </div>
+
+                  {/* Perfumer's Alcohol */}
+                  <div className="p-4 bg-[#140306] rounded-2xl border border-white/5 space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-[#A59283] tracking-wider block">
+                      Perfumer Alcohol (99.8%)
+                    </span>
+                    <div className="flex items-baseline justify-between">
+                      <span className="font-cinzel text-3xl font-extrabold text-cyan-400">
+                        {summary.remainingAlcoholMl} <span className="text-sm font-normal">ml</span>
+                      </span>
+                      <span className="text-xs text-[#A59283]">
+                        of {summary.labStock.initialAlcoholMl} ml
+                      </span>
+                    </div>
+                    <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-cyan-400 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (summary.remainingAlcoholMl / (summary.labStock.initialAlcoholMl || 1)) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="text-[11px] text-[#A59283]">
+                      Used: <strong className="text-white">{summary.totalAlcoholUsedMl} ml</strong>
+                    </div>
+                  </div>
+
+                  {/* Fragrance Oils */}
+                  <div className="p-4 bg-[#140306] rounded-2xl border border-white/5 space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-[#A59283] tracking-wider block">
+                      Pure European Fragrance Oils
+                    </span>
+                    <div className="flex items-baseline justify-between">
+                      <span className="font-cinzel text-3xl font-extrabold text-[#F6E3B4]">
+                        {summary.remainingOilMl} <span className="text-sm font-normal">ml</span>
+                      </span>
+                      <span className="text-xs text-[#A59283]">
+                        of {summary.labStock.initialOilMl} ml
+                      </span>
+                    </div>
+                    <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-[#F6E3B4] to-[#D4AF37] h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (summary.remainingOilMl / (summary.labStock.initialOilMl || 1)) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="text-[11px] text-[#A59283]">
+                      Used: <strong className="text-white">{summary.totalOilUsedMl} ml</strong>
+                    </div>
+                  </div>
+
+                  {/* Gold Atomizers & Caps */}
+                  <div className="p-4 bg-[#140306] rounded-2xl border border-white/5 space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-[#A59283] tracking-wider block">
+                      Crimped Atomizers &amp; Caps
+                    </span>
+                    <div className="flex items-baseline justify-between">
+                      <span className="font-cinzel text-3xl font-extrabold text-amber-300">
+                        {summary.remainingAtomizers}
+                      </span>
+                      <span className="text-xs text-[#A59283]">
+                        of {summary.labStock.initialAtomizers} left
+                      </span>
+                    </div>
+                    <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-amber-400 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (summary.remainingAtomizers / (summary.labStock.initialAtomizers || 1)) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="text-[11px] text-[#A59283]">
+                      Crimped: <strong className="text-white">{summary.totalBottlesSold} units</strong>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* Specific Fragrance Oil Consumption Breakdown */}
+              <div className="bg-[#1b050b] border border-[#D4AF37]/25 rounded-3xl p-6">
+                <h4 className="font-cinzel text-sm font-bold text-white mb-2 flex items-center gap-2">
+                  <Droplets className="w-4 h-4 text-[#D4AF37]" />
+                  <span>Oil Consumption Breakdown by Fragrance</span>
+                </h4>
+                <p className="text-xs text-[#A59283] mb-4">
+                  Shows exact milliliters of European fine oil pipetted into bottles per perfume formulation.
+                </p>
+
+                {Object.keys(summary.oilBreakdown).length === 0 ? (
+                  <div className="p-6 bg-[#140306] rounded-2xl border border-white/5 text-center text-xs text-[#78695d]">
+                    No perfume orders recorded yet. As orders are submitted, each scent's oil consumption will be tracked here.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {Object.entries(summary.oilBreakdown).map(([name, ml]) => (
+                      <div key={name} className="p-3 bg-[#140306] rounded-xl border border-white/5 flex items-center justify-between">
+                        <span className="text-xs text-white font-medium truncate max-w-[170px]">{name}</span>
+                        <span className="font-cinzel font-bold text-sm text-[#F6E3B4]">{ml} ml</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Equity & Profit Distribution Breakdown */}
               <div className="bg-[#1c060d] border border-white/10 rounded-2xl p-5">
                 <h4 className="font-cinzel text-sm font-bold text-white mb-3 flex items-center gap-2">
@@ -351,171 +598,174 @@ Could you please confirm your reservation? Thank you! 🙏`;
                 </div>
               </div>
 
-              {/* Customer Orders Table with Anti-Ghosting Follow-Up */}
-              <div>
-                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                  <h4 className="font-cinzel text-sm font-bold text-white flex items-center gap-2">
-                    <PackageCheck className="w-4 h-4 text-[#D4AF37]" />
-                    <span>Recorded Customer Orders ({orders.length})</span>
-                  </h4>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleExportCSV}
-                      className="px-3 py-1.5 rounded-lg bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#F6E3B4] text-xs font-semibold hover:bg-[#D4AF37] hover:text-[#140306] transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>Export Orders to Excel/CSV</span>
-                    </button>
-
-                    {orders.length > 0 && (
-                      <button
-                        onClick={handleClearOrders}
-                        className="p-1.5 text-xs text-rose-400 hover:text-rose-300 rounded hover:bg-rose-950/30 cursor-pointer"
-                        title="Reset test orders"
-                      >
-                        <RefreshCw className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {orders.length === 0 ? (
-                  <div className="bg-[#1b050b] border border-white/5 rounded-2xl p-8 text-center text-xs text-[#A59283]">
-                    No orders recorded yet. When customers submit through the website, their full contact details and order lines will be recorded here immediately.
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto rounded-2xl border border-white/10">
-                    <table className="w-full text-left text-xs text-[#D8C7B8]">
-                      <thead className="bg-[#24070f] text-[#F6E3B4] uppercase text-[10px] tracking-wider border-b border-white/10">
-                        <tr>
-                          <th className="py-2.5 px-3">Order ID</th>
-                          <th className="py-2.5 px-3">Customer Contact</th>
-                          <th className="py-2.5 px-3">Campus Location</th>
-                          <th className="py-2.5 px-3">Items Ordered</th>
-                          <th className="py-2.5 px-3">Total</th>
-                          <th className="py-2.5 px-3">Status</th>
-                          <th className="py-2.5 px-3 text-center">1-Click Follow-Up</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5 bg-[#140306]">
-                        {orders.map(order => (
-                          <tr
-                            key={order.id}
-                            className={`hover:bg-white/[0.02] align-top transition-colors ${
-                              order.status === 'Ghosted' ? 'opacity-40' : ''
-                            }`}
-                          >
-                            {/* Order ID */}
-                            <td className="py-3 px-3 font-mono text-[#D4AF37] whitespace-nowrap">
-                              {order.id}
-                              <div className="text-[10px] text-[#78695d]">
-                                {new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </div>
-                            </td>
-
-                            {/* Customer & Phone */}
-                            <td className="py-3 px-3 whitespace-nowrap">
-                              <div className="text-white font-medium">{order.studentName}</div>
-                              {order.studentPhone ? (
-                                <a
-                                  href={`tel:${order.studentPhone}`}
-                                  className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 mt-0.5"
-                                >
-                                  <Phone className="w-3 h-3" />
-                                  <span>{order.studentPhone}</span>
-                                </a>
-                              ) : (
-                                <span className="text-[10px] text-[#78695d]">No phone recorded</span>
-                              )}
-                            </td>
-
-                            {/* Campus Location */}
-                            <td className="py-3 px-3 text-[11px]">
-                              <div className="flex items-center gap-1 text-[#D8C7B8]">
-                                <Building2 className="w-3 h-3 text-[#D4AF37] flex-shrink-0" />
-                                <span>{order.collegeHostel || 'UTM Campus'}</span>
-                              </div>
-                              <div className="text-[10px] text-[#A59283] mt-0.5">{order.pickupStation.replace(' Hub', '')}</div>
-                            </td>
-
-                            {/* Items Ordered */}
-                            <td className="py-3 px-3">
-                              {order.items && order.items.length > 0 ? (
-                                <ul className="space-y-0.5">
-                                  {order.items.map((item, i) => (
-                                    <li key={i} className="text-[11px] text-[#C5B3A3]">
-                                      <span className="text-white font-semibold">{item.fullName || item.fragranceName}</span>
-                                      {' '}<span className="text-[#D4AF37]">{item.size}</span>
-                                      {' '}×{item.quantity}
-                                      {' '}<span className="text-[#A59283]">(RM {item.price * item.quantity})</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <span className="text-[#A59283] text-xs">Standard order</span>
-                              )}
-                            </td>
-
-                            {/* Total Price with Promo breakdown */}
-                            <td className="py-3 px-3 whitespace-nowrap">
-                              <div className="font-semibold text-white">RM {order.totalPrice}</div>
-                              {order.discountCode && (
-                                <div className="text-[10px] text-emerald-400">
-                                  -RM {order.discountAmount} ({order.discountCode})
-                                </div>
-                              )}
-                            </td>
-
-                            {/* Order Status Selector */}
-                            <td className="py-3 px-3 whitespace-nowrap">
-                              <select
-                                value={order.status}
-                                onChange={e => handleStatusChange(order.id, e.target.value as OrderRecord['status'])}
-                                className={`text-[10px] font-bold uppercase rounded-lg px-2 py-1 border cursor-pointer focus:outline-none ${
-                                  order.status === 'Collected'
-                                    ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
-                                    : order.status === 'Compounded'
-                                    ? 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40'
-                                    : order.status === 'Ghosted'
-                                    ? 'bg-rose-950/80 text-rose-300 border-rose-500/40'
-                                    : 'bg-amber-950/80 text-amber-300 border-amber-500/40'
-                                }`}
-                              >
-                                <option value="Pending" className="bg-[#140306] text-amber-300">Pending</option>
-                                <option value="Compounded" className="bg-[#140306] text-cyan-300">Compounded</option>
-                                <option value="Collected" className="bg-[#140306] text-emerald-300">Collected</option>
-                                <option value="Ghosted" className="bg-[#140306] text-rose-300">Ghosted (Ignored)</option>
-                              </select>
-                            </td>
-
-                            {/* 1-Click WhatsApp Follow-up button */}
-                            <td className="py-3 px-3 text-center whitespace-nowrap">
-                              {order.studentPhone ? (
-                                <button
-                                  type="button"
-                                  onClick={() => handleFollowUpCustomer(order)}
-                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500 hover:text-[#140306] text-[11px] font-semibold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
-                                  title="Send follow-up WhatsApp to confirm their order"
-                                >
-                                  <MessageCircle className="w-3.5 h-3.5" />
-                                  <span>Ping on WhatsApp</span>
-                                </button>
-                              ) : (
-                                <span className="text-[10px] text-[#78695d]">—</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </>
+            </div>
           )}
 
-          {/* ================= TAB 2: VIP SURVEY VOUCHERS REGISTRY ================= */}
+          {/* ================= TAB 2: ORDERS TABLE ================= */}
+          {activeTab === 'orders' && (
+            <div>
+              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <h4 className="font-cinzel text-sm font-bold text-white flex items-center gap-2">
+                  <PackageCheck className="w-4 h-4 text-[#D4AF37]" />
+                  <span>Recorded Customer Orders ({orders.length})</span>
+                </h4>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleExportCSV}
+                    className="px-3 py-1.5 rounded-lg bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#F6E3B4] text-xs font-semibold hover:bg-[#D4AF37] hover:text-[#140306] transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Export Orders to Excel/CSV</span>
+                  </button>
+
+                  {orders.length > 0 && (
+                    <button
+                      onClick={handleClearOrders}
+                      className="p-1.5 text-xs text-rose-400 hover:text-rose-300 rounded hover:bg-rose-950/30 cursor-pointer"
+                      title="Reset test orders"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {orders.length === 0 ? (
+                <div className="bg-[#1b050b] border border-white/5 rounded-2xl p-8 text-center text-xs text-[#A59283]">
+                  No orders recorded yet. When customers submit through the website, their full contact details and order lines will be recorded here immediately.
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-2xl border border-white/10">
+                  <table className="w-full text-left text-xs text-[#D8C7B8]">
+                    <thead className="bg-[#24070f] text-[#F6E3B4] uppercase text-[10px] tracking-wider border-b border-white/10">
+                      <tr>
+                        <th className="py-2.5 px-3">Order ID</th>
+                        <th className="py-2.5 px-3">Customer Contact</th>
+                        <th className="py-2.5 px-3">Campus Location</th>
+                        <th className="py-2.5 px-3">Items Ordered</th>
+                        <th className="py-2.5 px-3">Total</th>
+                        <th className="py-2.5 px-3">Status</th>
+                        <th className="py-2.5 px-3 text-center">1-Click Follow-Up</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 bg-[#140306]">
+                      {orders.map(order => (
+                        <tr
+                          key={order.id}
+                          className={`hover:bg-white/[0.02] align-top transition-colors ${
+                            order.status === 'Ghosted' ? 'opacity-40' : ''
+                          }`}
+                        >
+                          {/* Order ID */}
+                          <td className="py-3 px-3 font-mono text-[#D4AF37] whitespace-nowrap">
+                            {order.id}
+                            <div className="text-[10px] text-[#78695d]">
+                              {new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </td>
+
+                          {/* Customer & Phone */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <div className="text-white font-medium">{order.studentName}</div>
+                            {order.studentPhone ? (
+                              <a
+                                href={`tel:${order.studentPhone}`}
+                                className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 mt-0.5"
+                              >
+                                <Phone className="w-3 h-3" />
+                                <span>{order.studentPhone}</span>
+                              </a>
+                            ) : (
+                              <span className="text-[10px] text-[#78695d]">No phone recorded</span>
+                            )}
+                          </td>
+
+                          {/* Campus Location */}
+                          <td className="py-3 px-3 text-[11px]">
+                            <div className="flex items-center gap-1 text-[#D8C7B8]">
+                              <Building2 className="w-3 h-3 text-[#D4AF37] flex-shrink-0" />
+                              <span>{order.collegeHostel || 'UTM Campus'}</span>
+                            </div>
+                            <div className="text-[10px] text-[#A59283] mt-0.5">{order.pickupStation.replace(' Hub', '')}</div>
+                          </td>
+
+                          {/* Items Ordered */}
+                          <td className="py-3 px-3">
+                            {order.items && order.items.length > 0 ? (
+                              <ul className="space-y-0.5">
+                                {order.items.map((item, i) => (
+                                  <li key={i} className="text-[11px] text-[#C5B3A3]">
+                                    <span className="text-white font-semibold">{item.fullName || item.fragranceName}</span>
+                                    {' '}<span className="text-[#D4AF37]">{item.size} ({item.concentration || 20}% oil)</span>
+                                    {' '}×{item.quantity}
+                                    {' '}<span className="text-[#A59283]">(RM {item.price * item.quantity})</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <span className="text-[#A59283] text-xs">Standard order</span>
+                            )}
+                          </td>
+
+                          {/* Total Price with Promo breakdown */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <div className="font-semibold text-white">RM {order.totalPrice}</div>
+                            {order.discountCode && (
+                              <div className="text-[10px] text-emerald-400">
+                                -RM {order.discountAmount} ({order.discountCode})
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Order Status Selector */}
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <select
+                              value={order.status}
+                              onChange={e => handleStatusChange(order.id, e.target.value as OrderRecord['status'])}
+                              className={`text-[10px] font-bold uppercase rounded-lg px-2 py-1 border cursor-pointer focus:outline-none ${
+                                order.status === 'Collected'
+                                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
+                                  : order.status === 'Compounded'
+                                  ? 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40'
+                                  : order.status === 'Ghosted'
+                                  ? 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+                                  : 'bg-amber-950/80 text-amber-300 border-amber-500/40'
+                              }`}
+                            >
+                              <option value="Pending" className="bg-[#140306] text-amber-300">Pending</option>
+                              <option value="Compounded" className="bg-[#140306] text-cyan-300">Compounded</option>
+                              <option value="Collected" className="bg-[#140306] text-emerald-300">Collected</option>
+                              <option value="Ghosted" className="bg-[#140306] text-rose-300">Ghosted (Ignored)</option>
+                            </select>
+                          </td>
+
+                          {/* 1-Click WhatsApp Follow-up button */}
+                          <td className="py-3 px-3 text-center whitespace-nowrap">
+                            {order.studentPhone ? (
+                              <button
+                                type="button"
+                                onClick={() => handleFollowUpCustomer(order)}
+                                className="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500 hover:text-[#140306] text-[11px] font-semibold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
+                                title="Send follow-up WhatsApp to confirm their order"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5" />
+                                <span>Ping on WhatsApp</span>
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-[#78695d]">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ================= TAB 3: VIP SURVEY VOUCHERS REGISTRY ================= */}
           {activeTab === 'vouchers' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-3">
@@ -620,7 +870,9 @@ Could you please confirm your reservation? Thank you! 🙏`;
         {/* Footer */}
         <div className="p-4 bg-[#1b050b] border-t border-[#D4AF37]/25 flex items-center justify-between text-xs text-[#A59283]">
           <span>
-            {activeTab === 'orders'
+            {activeTab === 'inventory'
+              ? 'Raw materials update automatically as orders are placed. Use "Edit Initial Stock" to adjust starting inventory.'
+              : activeTab === 'orders'
               ? 'Tip: If a customer ignores you on WhatsApp, switch their status to "Ghosted" to immediately free their bottle slot.'
               : 'All 129 survey codes are registered. The website rejects invalid codes and prevents reusing codes.'}
           </span>

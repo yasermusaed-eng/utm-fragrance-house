@@ -2,13 +2,16 @@
 
 @layer base {
   :root {
-    --font-cinzel: 'Cinzel', serif;
+    --font-luxury: 'Cormorant Garamond', Georgia, serif;
+    --font-cinzel: 'Cormorant Garamond', Georgia, serif;
     --font-sans: 'Plus Jakarta Sans', sans-serif;
   }
 }
 
-.font-cinzel {
-  font-family: var(--font-cinzel);
+.font-cinzel,
+.font-luxury {
+  font-family: var(--font-luxury);
+  letter-spacing: 0.015em;
 }
 
 .font-sans {

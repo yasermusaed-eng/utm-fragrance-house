@@ -90,7 +90,7 @@ export const FragranceList: React.FC<FragranceListProps> = ({ onSelectForOrder }
 
       {/* Fragrances Grid */}
       {filteredFragrances.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
           {filteredFragrances.map(fragrance => (
             <FragranceCard
               key={fragrance.id}
