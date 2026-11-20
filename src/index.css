@@ -2,9 +2,9 @@
 
 @layer base {
   :root {
-    --font-luxury: 'Cormorant Garamond', Georgia, serif;
-    --font-cinzel: 'Cormorant Garamond', Georgia, serif;
-    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    --font-luxury: 'Playfair Display', Georgia, serif;
+    --font-cinzel: 'Playfair Display', Georgia, serif;
+    --font-sans: 'Montserrat', sans-serif;
   }
 }
 
